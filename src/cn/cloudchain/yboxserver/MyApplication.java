@@ -3,9 +3,14 @@ package cn.cloudchain.yboxserver;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.WifiConfiguration;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import cn.cloudchain.yboxserver.helper.WifiApManager;
+import cn.cloudchain.yboxserver.receiver.BatteryInfoBroadcastReceiver;
+import cn.cloudchain.yboxserver.receiver.PhoneStateMonitor;
 import cn.cloudchain.yboxserver.server.TcpServer;
 import cn.cloudchain.yboxserver.server.UdpServer;
 
@@ -41,15 +46,14 @@ public class MyApplication extends Application {
 		// IntentFilter(Intent.ACTION_TIME_TICK);
 		// registerReceiver(new TimeTickBroadcastReceiver(), timeTickFilter);
 
-		// IntentFilter batteryFilter = new IntentFilter();
-		// batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
-		// batteryFilter.addAction(Intent.ACTION_BATTERY_LOW);
-		// registerReceiver(new BatteryInfoBroadcastReceiver(), batteryFilter);
-		//
-		// TelephonyManager telManager = (TelephonyManager)
-		// getSystemService(Context.TELEPHONY_SERVICE);
-		// telManager.listen(new PhoneStateMonitor(telManager),
-		// PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+		IntentFilter batteryFilter = new IntentFilter();
+		batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+		batteryFilter.addAction(Intent.ACTION_BATTERY_LOW);
+		registerReceiver(new BatteryInfoBroadcastReceiver(), batteryFilter);
+
+		TelephonyManager telManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		telManager.listen(new PhoneStateMonitor(telManager),
+				PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 	}
 
 	public static Context getAppContext() {
