@@ -26,10 +26,17 @@ public class PhoneManager {
 	 * @param restart
 	 *            true时重启
 	 */
-	public void shutdown(boolean restart) {
-		Intent intent = new Intent(restart ? Intent.ACTION_REBOOT
-				: Intent.ACTION_SHUTDOWN);
-		context.sendBroadcast(intent);
+	public boolean shutdown(boolean restart) {
+		boolean result = false;
+		try {
+			Intent intent = new Intent(restart ? Intent.ACTION_REBOOT
+					: Intent.ACTION_SHUTDOWN);
+			context.sendBroadcast(intent);
+			result = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 
 	/**
