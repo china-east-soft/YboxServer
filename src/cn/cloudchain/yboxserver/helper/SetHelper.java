@@ -90,6 +90,8 @@ public class SetHelper {
 					boolean enable = params.optBoolean("enable");
 					result = setMobileDataEnable(enable);
 				}
+			} else if (OperType.signal_quality.getValue() == oper) {
+				result = getSignalQuality();
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -106,8 +108,7 @@ public class SetHelper {
 	 * @return 请求结果
 	 */
 	private String shutdown(boolean restart) {
-		phoneManager.shutdown(restart);
-		return getDefaultSuccessJson();
+		return getDefaultJson(phoneManager.shutdown(restart));
 	}
 
 	/**
@@ -115,12 +116,38 @@ public class SetHelper {
 	 * 
 	 * @return {"result":true, "remain":59}
 	 */
-	public String getBattery() {
+	private String getBattery() {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("result").value(true).name("remain")
 					.value(phoneManager.getBattery()).endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
+	}
+
+	/**
+	 * 获取3G信号质量
+	 * 
+	 * @return {"result":true, "strength":-102}
+	 */
+	private String getSignalQuality() {
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(true).name("strength")
+					.value(MyApplication.getInstance().signalStrength)
+					.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -142,9 +169,8 @@ public class SetHelper {
 	 *            true时允许数据流量
 	 * @return
 	 */
-	public String setMobileDataEnable(boolean enable) {
-		return phoneManager.setMobileDataEnabled(enable) ? getDefaultSuccessJson()
-				: getErrorJson();
+	private String setMobileDataEnable(boolean enable) {
+		return getDefaultJson(phoneManager.setMobileDataEnabled(enable));
 	}
 
 	/**
@@ -154,7 +180,7 @@ public class SetHelper {
 	 * @param pass
 	 * @return
 	 */
-	public String setWifiInfo(String ssid, String pass) {
+	private String setWifiInfo(String ssid, String pass) {
 		Log.i(TAG, "ssid = " + ssid + "; pass = " + pass);
 		WifiConfiguration wifiConfig = new WifiConfiguration();
 		// StringBuilder builder = new StringBuilder(20);
@@ -172,8 +198,7 @@ public class SetHelper {
 		}
 		wifiConfig.status = WifiConfiguration.Status.ENABLED;
 		wifiConfig.hiddenSSID = false;
-		return wifiApManager.setWifiApConfiguration(wifiConfig) ? getDefaultSuccessJson()
-				: getErrorJson();
+		return getDefaultJson(wifiApManager.setWifiApConfiguration(wifiConfig));
 	}
 
 	/**
@@ -181,10 +206,10 @@ public class SetHelper {
 	 * 
 	 * @return
 	 */
-	public String getWifiInfo() {
+	private String getWifiInfo() {
 		WifiConfiguration config = wifiApManager.getWifiApConfiguration();
 		if (config == null)
-			return getErrorJson();
+			return getDefaultJson(false);
 
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
@@ -210,10 +235,10 @@ public class SetHelper {
 	 * 
 	 * @return
 	 */
-	public String getDevices() {
+	private String getDevices() {
 		List<DeviceInfo> infos = wifiApManager.getDeviceList();
 		if (infos == null)
-			return getErrorJson();
+			return getDefaultJson(false);
 
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
@@ -254,9 +279,8 @@ public class SetHelper {
 	 *            true是为暂时拒绝该设备连接，false时永久加入黑名单
 	 * @return
 	 */
-	public String addToBlackList(String mac, boolean once) {
-		return wifiApManager.addToBlacklist(mac) ? getDefaultSuccessJson()
-				: getErrorJson();
+	private String addToBlackList(String mac, boolean once) {
+		return getDefaultJson(wifiApManager.addToBlacklist(mac));
 	}
 
 	/**
@@ -266,15 +290,19 @@ public class SetHelper {
 	 *            设备号，为""时清除所有的黑名单
 	 * @return
 	 */
-	public String clearBlackList(String mac) {
-		return wifiApManager.clearBlacklist(mac) ? getDefaultSuccessJson()
-				: getErrorJson();
+	private String clearBlackList(String mac) {
+		return getDefaultJson(wifiApManager.clearBlacklist(mac));
 	}
 
-	private String getErrorJson() {
-		return getErrorJson(-1, null);
-	}
-
+	/**
+	 * 获取错误返回 {"result":false, "error_code":1, "error_msg":"json invalid"}
+	 * 
+	 * @param code
+	 *            可选，值<0时不显示
+	 * @param msg
+	 *            可选，为空时不显示
+	 * @return
+	 */
 	private String getErrorJson(int code, String msg) {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
@@ -301,11 +329,17 @@ public class SetHelper {
 		return sw.toString();
 	}
 
-	private String getDefaultSuccessJson() {
+	/**
+	 * 获取默认的返回
+	 * 
+	 * @param success
+	 * @return {"result":success}
+	 */
+	private String getDefaultJson(boolean success) {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true).endObject();
+			jWriter.beginObject().name("result").value(success).endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
