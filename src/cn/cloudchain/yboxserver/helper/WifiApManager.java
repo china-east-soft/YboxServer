@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
@@ -156,11 +157,15 @@ public class WifiApManager {
 				if (line.contains("address")) {
 					continue;
 				}
-				String[] params = line.split("\\s+");
 				DeviceInfo info = new DeviceInfo();
-				if (params.length > 3) {
-					info.mac = params[3];
-					info.ip = params[0];
+				StringTokenizer tokenizer = new StringTokenizer(line);
+				for (int i = 0; tokenizer.hasMoreElements(); ++i) {
+					if (i == 0) {
+						info.ip = (String) tokenizer.nextElement();
+					} else if (i == 3) {
+						info.mac = (String) tokenizer.nextElement();
+					}
+
 				}
 				array.add(info);
 			}
