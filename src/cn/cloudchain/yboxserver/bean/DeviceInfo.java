@@ -7,6 +7,7 @@ public class DeviceInfo implements Parcelable {
 	public String mac;
 	public String ip;
 	public String name;
+	public boolean blocked;
 
 	public static final Parcelable.Creator<DeviceInfo> CREATOR = new Parcelable.Creator<DeviceInfo>() {
 
@@ -16,6 +17,7 @@ public class DeviceInfo implements Parcelable {
 			info.mac = source.readString();
 			info.ip = source.readString();
 			info.name = source.readString();
+			info.blocked = source.readInt() > 0 ? true : false;
 			return info;
 		}
 
@@ -35,6 +37,7 @@ public class DeviceInfo implements Parcelable {
 		dest.writeString(mac);
 		dest.writeString(ip);
 		dest.writeString(name);
+		dest.writeInt(blocked ? 1 : 0);
 	}
 
 }

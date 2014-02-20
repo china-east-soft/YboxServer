@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiConfiguration.AuthAlgorithm;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.text.TextUtils;
 import android.util.JsonWriter;
@@ -73,7 +74,7 @@ public class SetHelper {
 					result = getErrorJson(104, "with no params!");
 				} else {
 					String mac = params.optString("mac");
-					boolean once = params.optBoolean("once");
+					boolean once = params.optBoolean("once", false);
 					result = addToBlackList(mac, once);
 				}
 			} else if (OperType.wifi_blacklist_clear.getValue() == oper) {
@@ -185,17 +186,12 @@ public class SetHelper {
 	private String setWifiInfo(String ssid, String pass) {
 		Log.i(TAG, "ssid = " + ssid + "; pass = " + pass);
 		WifiConfiguration wifiConfig = new WifiConfiguration();
-		// StringBuilder builder = new StringBuilder(20);
-		// builder.append('\"');
-		// builder.append(ssid);
-		// builder.append('\"');
-		// wifiConfig.SSID = builder.toString();
 		wifiConfig.SSID = ssid;
 		if (TextUtils.isEmpty(pass)) {
 			wifiConfig.allowedKeyManagement.set(KeyMgmt.NONE);
 		} else {
-			wifiConfig.allowedKeyManagement.clear();
 			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA_PSK);
+			wifiConfig.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
 			wifiConfig.preSharedKey = pass;
 		}
 		wifiConfig.status = WifiConfiguration.Status.ENABLED;
@@ -217,7 +213,11 @@ public class SetHelper {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("result").value(true).name("ssid")
-					.value(config.SSID).endObject();
+					.value(config.SSID);
+			if (!config.allowedKeyManagement.get(KeyMgmt.NONE)) {
+				jWriter.name("pass").value(config.preSharedKey);
+			}
+			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -253,6 +253,7 @@ public class SetHelper {
 				jWriter.name("name").value(info.name);
 				jWriter.name("mac").value(info.mac);
 				jWriter.name("ip").value(info.ip);
+				jWriter.name("block").value(info.blocked);
 				jWriter.endObject();
 			}
 

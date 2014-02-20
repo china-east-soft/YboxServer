@@ -1,12 +1,8 @@
 package cn.cloudchain.yboxserver.helper;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
@@ -30,6 +26,10 @@ public class WifiApManager {
 	public static final int WIFI_AP_STATE_ENABLING = 12;
 	public static final int WIFI_AP_STATE_ENABLED = 13;
 	public static final int WIFI_AP_STATE_FAILED = 14;
+
+	public static final String WIFI_HOTSPOT_CLIENTS_CHANGED_ACTION = "android.net.wifi.WIFI_HOTSPOT_CLIENTS_CHANGED";
+
+	public static final String WIFI_HOTSPOT_OVERLAP_ACTION = "android.net.wifi.WIFI_HOTSPOT_OVERLAP";
 
 	public WifiApManager(Context context) {
 		mWifiManager = (WifiManager) context
@@ -117,19 +117,13 @@ public class WifiApManager {
 	/**
 	 * 没有起到禁止连接的作用
 	 * 
-	 * @param bssid
+	 * @param mac
 	 * @return
 	 */
-	public boolean addToBlacklist(String bssid) {
-		boolean result = false;
-		try {
-			Method method = WifiManager.class.getMethod("addToBlacklist",
-					String.class);
-			result = (Boolean) method.invoke(mWifiManager, bssid);
-		} catch (Exception e) {
-			Log.e(tag, e.getMessage(), e);
-		}
-		return result;
+	public boolean addToBlacklist(String mac) {
+		HotspotClient client = new HotspotClient();
+		client.setMacAddress(mac);
+		return mWifiManager.blockClient(client);
 	}
 
 	/**
@@ -137,15 +131,10 @@ public class WifiApManager {
 	 * 
 	 * @return
 	 */
-	public boolean clearBlacklist(String bssid) {
-		boolean result = false;
-		try {
-			Method method = WifiManager.class.getMethod("clearBlacklist");
-			result = (Boolean) method.invoke(mWifiManager);
-		} catch (Exception e) {
-			Log.e(tag, e.getMessage(), e);
-		}
-		return result;
+	public boolean clearBlacklist(String mac) {
+		HotspotClient client = new HotspotClient();
+		client.setMacAddress(mac);
+		return mWifiManager.unblockClient(client);
 	}
 
 	/**
@@ -154,33 +143,22 @@ public class WifiApManager {
 	 * @return 不为null
 	 */
 	public List<DeviceInfo> getDeviceList() {
-		List<DeviceInfo> array = new ArrayList<DeviceInfo>();
-		try {
-			FileReader fileReader = new FileReader("/proc/net/arp");
-			BufferedReader br = new BufferedReader(fileReader);
-			String line;
-			while ((line = br.readLine()) != null) {
-				Log.i(tag, line);
-				if (line.contains("address")) {
-					continue;
-				}
-				DeviceInfo info = new DeviceInfo();
-				StringTokenizer tokenizer = new StringTokenizer(line);
-				for (int i = 0; tokenizer.hasMoreElements(); ++i) {
-					String s = (String) tokenizer.nextElement();
-					if (i == 0) {
-						info.ip = s;
-					} else if (i == 3) {
-						info.mac = s;
-						break;
-					}
-				}
-				array.add(info);
-			}
-			fileReader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		List<HotspotClient> mClientList = mWifiManager.getHotspotClients();
+		if (mClientList == null) {
+			return null;
 		}
-		return array;
+		List<DeviceInfo> deviceList = new ArrayList<DeviceInfo>(
+				mClientList.size());
+		for (HotspotClient client : mClientList) {
+			DeviceInfo info = new DeviceInfo();
+			info.mac = client.getMacAddress();
+			info.ip = mWifiManager.getClientIp(info.mac);
+			info.blocked = client.isBlocked();
+			deviceList.add(info);
+		}
+
+		return deviceList;
+
 	}
+
 }
