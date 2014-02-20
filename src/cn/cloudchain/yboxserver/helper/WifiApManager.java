@@ -128,7 +128,7 @@ public class WifiApManager {
 		}
 		boolean result = false;
 		for (HotspotClient client : mClientList) {
-			if (mac.equals(client.getMacAddress())) {
+			if (mac.equals(client.deviceAddress)) {
 				result = mWifiManager.blockClient(client);
 				break;
 			}
@@ -148,7 +148,7 @@ public class WifiApManager {
 		}
 		boolean result = false;
 		for (HotspotClient client : mClientList) {
-			if (mac.equals(client.getMacAddress())) {
+			if (mac.equals(client.deviceAddress)) {
 				result = mWifiManager.unblockClient(client);
 				break;
 			}
@@ -170,9 +170,9 @@ public class WifiApManager {
 				mClientList.size());
 		for (HotspotClient client : mClientList) {
 			DeviceInfo info = new DeviceInfo();
-			info.mac = client.getMacAddress();
+			info.mac = client.deviceAddress;
 			info.ip = mWifiManager.getClientIp(info.mac);
-			info.blocked = client.isBlocked();
+			info.blocked = client.isBlocked;
 			deviceList.add(info);
 		}
 
