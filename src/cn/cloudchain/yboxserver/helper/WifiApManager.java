@@ -122,9 +122,18 @@ public class WifiApManager {
 	 * @return
 	 */
 	public boolean addToBlacklist(String mac) {
-		HotspotClient client = new HotspotClient();
-		client.setMacAddress(mac);
-		return mWifiManager.blockClient(client);
+		List<HotspotClient> mClientList = mWifiManager.getHotspotClients();
+		if (mClientList == null) {
+			return false;
+		}
+		boolean result = false;
+		for (HotspotClient client : mClientList) {
+			if (mac.equals(client.getMacAddress())) {
+				result = mWifiManager.blockClient(client);
+				break;
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -133,9 +142,18 @@ public class WifiApManager {
 	 * @return
 	 */
 	public boolean clearBlacklist(String mac) {
-		HotspotClient client = new HotspotClient();
-		client.setMacAddress(mac);
-		return mWifiManager.unblockClient(client);
+		List<HotspotClient> mClientList = mWifiManager.getHotspotClients();
+		if (mClientList == null) {
+			return false;
+		}
+		boolean result = false;
+		for (HotspotClient client : mClientList) {
+			if (mac.equals(client.getMacAddress())) {
+				result = mWifiManager.unblockClient(client);
+				break;
+			}
+		}
+		return result;
 	}
 
 	/**

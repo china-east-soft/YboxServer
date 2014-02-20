@@ -74,8 +74,7 @@ public class SetHelper {
 					result = getErrorJson(104, "with no params!");
 				} else {
 					String mac = params.optString("mac");
-					boolean once = params.optBoolean("once", false);
-					result = addToBlackList(mac, once);
+					result = addToBlackList(mac);
 				}
 			} else if (OperType.wifi_blacklist_clear.getValue() == oper) {
 				if (params == null) {
@@ -278,11 +277,9 @@ public class SetHelper {
 	 * 
 	 * @param mac
 	 *            设备号
-	 * @param once
-	 *            true是为暂时拒绝该设备连接，false时永久加入黑名单
 	 * @return
 	 */
-	private String addToBlackList(String mac, boolean once) {
+	private String addToBlackList(String mac) {
 		return getDefaultJson(wifiApManager.addToBlacklist(mac));
 	}
 
