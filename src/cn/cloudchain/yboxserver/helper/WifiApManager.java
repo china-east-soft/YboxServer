@@ -9,6 +9,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 import cn.cloudchain.yboxserver.bean.DeviceInfo;
+import android.net.wifi.HotspotClient;
 
 /**
  * 处理和无线控制相关的功能
