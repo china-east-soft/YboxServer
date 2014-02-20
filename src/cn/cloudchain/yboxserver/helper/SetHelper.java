@@ -92,6 +92,8 @@ public class SetHelper {
 				}
 			} else if (OperType.signal_quality.getValue() == oper) {
 				result = getSignalQuality();
+			} else if (OperType.storage.getValue() == oper) {
+				result = getStorageDetail();
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -292,6 +294,74 @@ public class SetHelper {
 	 */
 	private String clearBlackList(String mac) {
 		return getDefaultJson(wifiApManager.clearBlacklist(mac));
+	}
+
+	/**
+	 * 获取SD卡存储信息
+	 * 
+	 * @return {"result":true, "total":"20G","remain":"512MB"}
+	 */
+	private String getStorageDetail() {
+		double totalSize = Helper.getInstance().getSDcardTotalMemory();
+		if (totalSize < 0) {
+			return getErrorJson(1, "sdcard not available");
+		}
+		double availableSize = Helper.getInstance().getSDcardAvailableMemory();
+
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(true);
+			jWriter.name("total").value(getStorageBySize(totalSize));
+			jWriter.name("remain").value(getStorageBySize(availableSize));
+			jWriter.endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
+	}
+
+	/**
+	 * 获取便于阅读的存储大小
+	 * 
+	 * @param size
+	 * @return
+	 */
+	private String getStorageBySize(double size) {
+		StringBuilder builder = new StringBuilder();
+		int i = 0;
+		while (size >= 500 && i < 4) {
+			size = size / 1000;
+			++i;
+		}
+
+		builder.append(String.format("%.2f", size));
+		switch (i) {
+		case 0:
+			builder.append('B');
+			break;
+		case 1:
+			builder.append("KB");
+			break;
+		case 2:
+			builder.append("MB");
+			break;
+		case 3:
+			builder.append("GB");
+			break;
+		case 4:
+			builder.append("TB");
+			break;
+		}
+		return builder.toString();
 	}
 
 	/**

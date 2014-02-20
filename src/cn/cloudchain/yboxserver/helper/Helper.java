@@ -1,5 +1,6 @@
 package cn.cloudchain.yboxserver.helper;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
@@ -9,6 +10,8 @@ import java.util.Enumeration;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Environment;
+import android.os.StatFs;
 import android.util.Log;
 
 public class Helper {
@@ -72,5 +75,51 @@ public class Helper {
 		}
 
 		return broadcastAddress;
+	}
+
+	/**
+	 * 返回SD卡的总存储空间，单位b
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public double getSDcardTotalMemory() {
+		double memory = -1;
+		if (isSDcardAvailable()) {
+			File sdcardDir = Environment.getExternalStorageDirectory();
+			StatFs statFs = new StatFs(sdcardDir.getPath());
+			int blockCount = statFs.getBlockCount();
+			int blockSize = statFs.getBlockSize();
+			memory = blockCount * blockSize;
+		}
+		return memory;
+	}
+
+	/**
+	 * 返回SD卡的剩余存储空间，单位b
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public double getSDcardAvailableMemory() {
+		double memory = -1;
+		if (isSDcardAvailable()) {
+			File sdcardDir = Environment.getExternalStorageDirectory();
+			StatFs statFs = new StatFs(sdcardDir.getPath());
+			int blockSize = statFs.getBlockSize();
+			int availableBlock = statFs.getAvailableBlocks();
+			memory = blockSize * availableBlock;
+		}
+		return memory;
+	}
+
+	/**
+	 * 返回SD卡是否可用
+	 * 
+	 * @return
+	 */
+	private boolean isSDcardAvailable() {
+		return Environment.getExternalStorageState().equals(
+				Environment.MEDIA_MOUNTED);
 	}
 }
