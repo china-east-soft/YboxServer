@@ -49,15 +49,6 @@ public class PhoneManager {
 	}
 
 	/**
-	 * 是否为以太网连接
-	 * 
-	 * @return
-	 */
-	public boolean isWlan() {
-		return false;
-	}
-
-	/**
 	 * 手机数据是否启用
 	 * 
 	 * @return
