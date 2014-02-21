@@ -17,6 +17,8 @@ import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.bean.DeviceInfo;
 import cn.cloudchain.yboxserver.bean.OperType;
 
+import com.ybox.hal.BSPSystem;
+
 public class SetHelper {
 	final String TAG = SetHelper.class.getSimpleName();
 	private static SetHelper instance;
@@ -94,6 +96,21 @@ public class SetHelper {
 				result = getSignalQuality();
 			} else if (OperType.storage.getValue() == oper) {
 				result = getStorageDetail();
+			} else if (OperType.ethernet_info.getValue() == oper) {
+				result = getEthInfo();
+			} else if (OperType.ethernet_dhcp_set.getValue() == oper) {
+				result = setEthDhcp();
+			} else if (OperType.ethernet_static_set.getValue() == oper) {
+				if (params == null) {
+					result = getErrorJson(104, "with no params!");
+				} else {
+					String ip = params.optString("ip");
+					String gateway = params.optString("gateway");
+					String mask = params.optString("mask");
+					String dns1 = params.optString("dns1");
+					String dns2 = params.optString("dns2");
+					result = setEthStatic(ip, gateway, mask, dns1, dns2);
+				}
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -310,8 +327,10 @@ public class SetHelper {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("result").value(true);
-			jWriter.name("total").value(getStorageBySize(totalSize));
-			jWriter.name("remain").value(getStorageBySize(availableSize));
+			jWriter.name("total").value(
+					Helper.getInstance().getStorageBySize(totalSize));
+			jWriter.name("remain").value(
+					Helper.getInstance().getStorageBySize(availableSize));
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -328,38 +347,67 @@ public class SetHelper {
 	}
 
 	/**
-	 * 获取便于阅读的存储大小
+	 * 获取以太网信息
 	 * 
-	 * @param size
 	 * @return
 	 */
-	private String getStorageBySize(double size) {
-		StringBuilder builder = new StringBuilder();
-		int i = 0;
-		while (size >= 500 && i < 4) {
-			size = size / 1000;
-			++i;
-		}
+	private String getEthInfo() {
+		StringBuffer ip = new StringBuffer();
+		StringBuffer gw = new StringBuffer();
+		StringBuffer mask = new StringBuffer();
+		StringBuffer dns1 = new StringBuffer();
+		StringBuffer dns2 = new StringBuffer();
+		boolean result = BSPSystem.getEthernetInfo(ip, gw, mask, dns1, dns2);
 
-		builder.append(String.format("%.2f", size));
-		switch (i) {
-		case 0:
-			builder.append('B');
-			break;
-		case 1:
-			builder.append("KB");
-			break;
-		case 2:
-			builder.append("MB");
-			break;
-		case 3:
-			builder.append("GB");
-			break;
-		case 4:
-			builder.append("TB");
-			break;
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(result);
+			if (result) {
+				jWriter.name("ip").value(ip.toString());
+				jWriter.name("gatewap").value(gw.toString());
+				jWriter.name("mask").value(mask.toString());
+				jWriter.name("dns1").value(dns1.toString());
+				jWriter.name("dns2").value(dns2.toString());
+			}
+			jWriter.endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
-		return builder.toString();
+		return sw.toString();
+	}
+
+	/**
+	 * 设置以太网静态模式，以下参数均不能为空，不然设置失败
+	 * 
+	 * @param ip
+	 * @param gateway
+	 * @param mask
+	 * @param dns1
+	 * @param dns2
+	 * @return
+	 */
+	private String setEthStatic(String ip, String gateway, String mask,
+			String dns1, String dns2) {
+		return getDefaultJson(BSPSystem.setEthernetStatic(ip, gateway, mask,
+				dns1, dns2));
+	}
+
+	/**
+	 * 设置以太网DHCP模式
+	 * 
+	 * @return
+	 */
+	private String setEthDhcp() {
+		return getDefaultJson(BSPSystem.setEthernetDHCP());
 	}
 
 	/**

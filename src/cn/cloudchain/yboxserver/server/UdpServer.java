@@ -130,7 +130,7 @@ public class UdpServer extends Service {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("wifi_mode");
-			if (phoneManager.isWlan()) {
+			if (MyApplication.getInstance().isEthernet) {
 				jWriter.value("wlan");
 			} else if (phoneManager.isMobileDataEnabled()) {
 				jWriter.value("3g");

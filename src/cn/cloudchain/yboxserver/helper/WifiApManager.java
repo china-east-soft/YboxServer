@@ -10,6 +10,7 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 import cn.cloudchain.yboxserver.bean.DeviceInfo;
 import android.net.wifi.HotspotClient;
+import android.provider.Settings.System;
 
 /**
  * 处理和无线控制相关的功能
@@ -19,6 +20,7 @@ import android.net.wifi.HotspotClient;
  */
 public class WifiApManager {
 	private static final String tag = "WifiApManager";
+	private Context context;
 	private final WifiManager mWifiManager;
 	public static final String WIFI_AP_STATE_CHANGED_ACTION = "android.net.wifi.WIFI_AP_STATE_CHANGED";
 	public static final String EXTRA_WIFI_AP_STATE = "wifi_state";
@@ -180,4 +182,11 @@ public class WifiApManager {
 
 	}
 
+	/**
+	 * 设置最大支持的设备数
+	 */
+	public void setMaxClientNum() {
+		System.putInt(context.getContentResolver(),
+				System.WIFI_HOTSPOT_MAX_CLIENT_NUM, 10);
+	}
 }
