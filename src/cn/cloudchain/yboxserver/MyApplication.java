@@ -14,12 +14,14 @@ import cn.cloudchain.yboxserver.receiver.PhoneStateMonitor;
 import cn.cloudchain.yboxserver.server.TcpServer;
 import cn.cloudchain.yboxserver.server.UdpServer;
 
+import com.ybox.hal.BSPSystem;
+
 public class MyApplication extends Application {
 	final String TAG = MyApplication.class.getSimpleName();
 	private static MyApplication instance;
 	public int battery = -1;
 	public boolean isBatteryLow = false;
-
+    BSPSystem bsp = null;
 	public int signalStrength = -1;
 
 	@Override
