@@ -357,7 +357,8 @@ public class SetHelper {
 		StringBuffer mask = new StringBuffer();
 		StringBuffer dns1 = new StringBuffer();
 		StringBuffer dns2 = new StringBuffer();
-		boolean result = BSPSystem.getEthernetInfo(ip, gw, mask, dns1, dns2);
+		boolean result = BSPSystem.getInstance().getEthernetInfo(ip, gw, mask,
+				dns1, dns2);
 
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
@@ -397,8 +398,8 @@ public class SetHelper {
 	 */
 	private String setEthStatic(String ip, String gateway, String mask,
 			String dns1, String dns2) {
-		return getDefaultJson(BSPSystem.setEthernetStatic(ip, gateway, mask,
-				dns1, dns2));
+		return getDefaultJson(BSPSystem.setEthernetStatic(
+				MyApplication.getAppContext(), ip, gateway, mask, dns1, dns2));
 	}
 
 	/**
@@ -407,7 +408,8 @@ public class SetHelper {
 	 * @return
 	 */
 	private String setEthDhcp() {
-		return getDefaultJson(BSPSystem.setEthernetDHCP());
+		return getDefaultJson(BSPSystem.setEthernetDHCP(MyApplication
+				.getAppContext()));
 	}
 
 	/**

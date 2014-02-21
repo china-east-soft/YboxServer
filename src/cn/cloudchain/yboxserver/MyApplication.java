@@ -30,7 +30,7 @@ public class MyApplication extends Application {
 		instance = this;
 		Log.i(TAG, "onCreate");
 
-		isEthernet = BSPSystem.getConnected();
+		isEthernet = BSPSystem.getInstance().getConnected();
 
 		new Thread(new Runnable() {
 
