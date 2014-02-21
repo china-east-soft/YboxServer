@@ -118,8 +118,43 @@ public class Helper {
 	 * 
 	 * @return
 	 */
-	private boolean isSDcardAvailable() {
+	public boolean isSDcardAvailable() {
 		return Environment.getExternalStorageState().equals(
 				Environment.MEDIA_MOUNTED);
+	}
+
+	/**
+	 * 获取便于阅读的存储大小
+	 * 
+	 * @param size
+	 * @return
+	 */
+	public String getStorageBySize(double size) {
+		StringBuilder builder = new StringBuilder();
+		int i = 0;
+		while (size >= 500 && i < 4) {
+			size = size / 1000;
+			++i;
+		}
+
+		builder.append(String.format("%.2f", size));
+		switch (i) {
+		case 0:
+			builder.append('B');
+			break;
+		case 1:
+			builder.append("KB");
+			break;
+		case 2:
+			builder.append("MB");
+			break;
+		case 3:
+			builder.append("GB");
+			break;
+		case 4:
+			builder.append("TB");
+			break;
+		}
+		return builder.toString();
 	}
 }
