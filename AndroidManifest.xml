@@ -41,6 +41,9 @@
             <intent-filter>
                 <action android:name="android.net.wifi.WIFI_HOTSPOT_CLIENTS_CHANGED" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.net.conn.ETHERNET_STATE_CHANGED" />
+            </intent-filter>
         </receiver>
     </application>
 
