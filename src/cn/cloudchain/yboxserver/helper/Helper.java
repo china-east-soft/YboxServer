@@ -63,9 +63,9 @@ public class Helper {
 					for (InterfaceAddress infaceAddress : singleInterface
 							.getInterfaceAddresses()) {
 						broadcastAddress = infaceAddress.getBroadcast();
-						if (broadcastAddress != null) {
-							break;
-						}
+//						if (broadcastAddress != null) {
+//							break;
+//						}
 					}
 				}
 			}

@@ -31,6 +31,7 @@ public class UdpServer extends Service {
 	private DatagramSocket socket;
 	private final int PORT = 12345;
 	private final String defaultHost = "192.168.43.255";
+	private boolean lastEthernet = MyApplication.getInstance().isEthernet;
 
 	private MulticastLock multiLock;
 
@@ -103,6 +104,17 @@ public class UdpServer extends Service {
 	}
 
 	private void sendUdpBroadcast() {
+		boolean currentEthernet = MyApplication.getInstance().isEthernet;
+		// 如果连接模式变化，重新绑定端口
+		if (currentEthernet != lastEthernet) {
+			if (socket != null) {
+				socket.disconnect();
+				socket.close();
+				socket = null;
+			}
+			lastEthernet = currentEthernet;
+		}
+
 		if (socket == null) {
 			generateSocket();
 		}
@@ -130,7 +142,7 @@ public class UdpServer extends Service {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("wifi_mode");
-			if (MyApplication.getInstance().isEthernet) {
+			if (lastEthernet) {
 				jWriter.value("wlan");
 			} else if (phoneManager.isMobileDataEnabled()) {
 				jWriter.value("3g");
