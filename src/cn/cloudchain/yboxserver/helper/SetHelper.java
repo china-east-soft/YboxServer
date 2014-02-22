@@ -111,6 +111,17 @@ public class SetHelper {
 					String dns2 = params.optString("dns2");
 					result = setEthStatic(ip, gateway, mask, dns1, dns2);
 				}
+			} else if (OperType.wifi_restart.getValue() == oper) {
+				result = restartWifiAp();
+			} else if (OperType.wifi_auto_disable_info.getValue() == oper) {
+				result = getWifiAutoDisable();
+			} else if (OperType.wifi_auto_disable_set.getValue() == oper) {
+				if (params == null) {
+					result = getErrorJson(104, "with no params!");
+				} else {
+					int time = params.optInt("time");
+					result = setWifiAutoDisable(time);
+				}
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -410,6 +421,55 @@ public class SetHelper {
 	private String setEthDhcp() {
 		return getDefaultJson(BSPSystem.setEthernetDHCP(MyApplication
 				.getAppContext()));
+	}
+
+	/**
+	 * 重启热点
+	 * 
+	 * @return
+	 */
+	private String restartWifiAp() {
+		WifiConfiguration wifiConfig = wifiApManager.getWifiApConfiguration();
+		boolean result = false;
+		if (wifiApManager.setWifiApEnabled(wifiConfig, false)) {
+			result = wifiApManager.setWifiApEnabled(wifiConfig, true);
+		}
+		return getDefaultJson(result);
+	}
+
+	/**
+	 * 设置热点自动关闭时间
+	 * 
+	 * @return
+	 */
+	private String setWifiAutoDisable(int value) {
+		return getDefaultJson(wifiApManager.setWifiAutoDisable(value));
+	}
+
+	/**
+	 * 获取热点自动关闭时间
+	 * 
+	 * @return {"result":true, "time":5}
+	 */
+	private String getWifiAutoDisable() {
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(true);
+			jWriter.name("time").value(wifiApManager.getWifiAutoDisable());
+			jWriter.endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
 	}
 
 	/**

@@ -8,6 +8,7 @@ import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.util.Log;
+import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.bean.DeviceInfo;
 import android.net.wifi.HotspotClient;
 import android.provider.Settings.System;
@@ -184,9 +185,33 @@ public class WifiApManager {
 
 	/**
 	 * 设置最大支持的设备数
+	 * 
+	 * @return
 	 */
-	public void setMaxClientNum() {
-		System.putInt(context.getContentResolver(),
+	public boolean setMaxClientNum() {
+		return System.putInt(context.getContentResolver(),
 				System.WIFI_HOTSPOT_MAX_CLIENT_NUM, 10);
+	}
+
+	/**
+	 * 设置热点自动关闭时间
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public boolean setWifiAutoDisable(int value) {
+		return System.putInt(context.getContentResolver(),
+				System.WIFI_HOTSPOT_AUTO_DISABLE, value);
+	}
+
+	/**
+	 * 获取热点自动关闭时间
+	 * 
+	 * @return
+	 */
+	public int getWifiAutoDisable() {
+		return System.getInt(context.getContentResolver(),
+				System.WIFI_HOTSPOT_AUTO_DISABLE,
+				System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS);
 	}
 }
