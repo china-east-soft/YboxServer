@@ -10,8 +10,8 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.bean.DeviceInfo;
-import android.net.wifi.HotspotClient;
 import android.provider.Settings.System;
+import android.net.wifi.HotspotClient;
 
 /**
  * 处理和无线控制相关的功能
@@ -36,6 +36,7 @@ public class WifiApManager {
 	public static final String WIFI_HOTSPOT_OVERLAP_ACTION = "android.net.wifi.WIFI_HOTSPOT_OVERLAP";
 
 	public WifiApManager(Context context) {
+		this.context = context;
 		mWifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
 	}
@@ -210,8 +211,14 @@ public class WifiApManager {
 	 * @return
 	 */
 	public int getWifiAutoDisable() {
-		return System.getInt(context.getContentResolver(),
-				System.WIFI_HOTSPOT_AUTO_DISABLE,
-				System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS);
+			return System.getInt(context.getContentResolver(),
+					System.WIFI_HOTSPOT_AUTO_DISABLE,
+					System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS);
 	}
+
+	// public static final String WIFI_HOTSPOT_AUTO_DISABLE =
+	// "wifi_hotspot_auto_disable";
+	// public static final int WIFI_HOTSPOT_AUTO_DISABLE_OFF = 0;
+	// public static final int WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS = 1;
+	// public static final int WIFI_HOTSPOT_AUTO_DISABLE_FOR_TEN_MINS = 2;
 }
