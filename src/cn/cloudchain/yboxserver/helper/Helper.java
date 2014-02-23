@@ -60,12 +60,15 @@ public class Helper {
 				String interfaceName = singleInterface.getName();
 				if (interfaceName.contains("wlan0")
 						|| interfaceName.contains("eth0")) {
+					Log.i("UdpServer", "interface name = " + interfaceName);
 					for (InterfaceAddress infaceAddress : singleInterface
 							.getInterfaceAddresses()) {
 						broadcastAddress = infaceAddress.getBroadcast();
-//						if (broadcastAddress != null) {
+						if (broadcastAddress != null) {
+							Log.i("UdpServer", "broadcast address = "
+									+ broadcastAddress.getHostAddress());
 //							break;
-//						}
+						}
 					}
 				}
 			}

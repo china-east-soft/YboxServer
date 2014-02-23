@@ -45,6 +45,7 @@ public class UdpServer extends Service {
 		multiLock = wifi.createMulticastLock(TAG);
 		multiLock.acquire();
 		Log.i(TAG, "onCreate");
+		Helper.getInstance().getBroadcastAddress();
 	}
 
 	@Override
@@ -80,8 +81,9 @@ public class UdpServer extends Service {
 
 	private void generateSocket() {
 		Log.i(TAG, "generate socket");
-		InetAddress broadcastAddress = Helper.getInstance()
-				.getBroadcastAddress();
+		InetAddress broadcastAddress = null;
+		// InetAddress broadcastAddress = Helper.getInstance()
+		// .getBroadcastAddress();
 
 		try {
 			socket = new DatagramSocket(PORT);
