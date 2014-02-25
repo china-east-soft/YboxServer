@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
@@ -31,7 +30,7 @@ public class UdpServer extends Service {
 	private DatagramSocket socket;
 	private final int PORT = 12345;
 	private final String defaultHost = "192.168.43.255";
-	private boolean lastEthernet = MyApplication.getInstance().isEthernet;
+	// private boolean lastEthernet = MyApplication.getInstance().isEthernet;
 
 	private MulticastLock multiLock;
 
@@ -81,7 +80,7 @@ public class UdpServer extends Service {
 
 	private void generateSocket() {
 		Log.i(TAG, "generate socket");
-		InetAddress broadcastAddress = null;
+		// InetAddress broadcastAddress = null;
 		// InetAddress broadcastAddress = Helper.getInstance()
 		// .getBroadcastAddress();
 
@@ -89,15 +88,7 @@ public class UdpServer extends Service {
 			socket = new DatagramSocket(PORT);
 			socket.setReuseAddress(true);
 			socket.setBroadcast(true);
-			SocketAddress address = null;
-			if (broadcastAddress == null) {
-				address = new InetSocketAddress(defaultHost, PORT);
-			} else {
-				Log.i(TAG,
-						"broadcast address = "
-								+ broadcastAddress.getHostAddress());
-				address = new InetSocketAddress(broadcastAddress, PORT);
-			}
+			SocketAddress address = new InetSocketAddress(defaultHost, PORT);
 			socket.connect(address);
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -106,17 +97,6 @@ public class UdpServer extends Service {
 	}
 
 	private void sendUdpBroadcast() {
-		boolean currentEthernet = MyApplication.getInstance().isEthernet;
-		// 如果连接模式变化，重新绑定端口
-		if (currentEthernet != lastEthernet) {
-			if (socket != null) {
-				socket.disconnect();
-				socket.close();
-				socket = null;
-			}
-			lastEthernet = currentEthernet;
-		}
-
 		if (socket == null) {
 			generateSocket();
 		}
@@ -144,7 +124,7 @@ public class UdpServer extends Service {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("wifi_mode");
-			if (lastEthernet) {
+			if (MyApplication.getInstance().isEthernet) {
 				jWriter.value("wlan");
 			} else if (phoneManager.isMobileDataEnabled()) {
 				jWriter.value("3g");
