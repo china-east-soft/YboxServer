@@ -128,13 +128,14 @@ public class DataUsageHelper {
 		List<SIMInfo> mSimList = SIMInfo.getInsertedSIMList(context);
 		if (mSimList == null)
 			return null;
-
+		INetworkStatsSession mStatsSession = null;
 		try {
-			INetworkStatsSession mStatsSession = mStatsService.openSession();
+			mStatsSession = mStatsService.openSession();
 		} catch (RemoteException e) {
 			Log.d(TAG, "Remote Exception happens");
-			return null;
 		}
+		if (mStatsSession == null)
+			return null;
 
 		List<SparseArray<Long>> list = new ArrayList<SparseArray<Long>>(
 				mSimList.size());
