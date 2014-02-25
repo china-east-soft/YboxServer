@@ -57,9 +57,10 @@ public class DataUsageHelper {
 	public static final int KEY_SIM_SLOT = 50;
 
 	public DataUsageHelper(Context context) {
-		refreshPolicy();
+		this.context = context;
 		mStatsService = INetworkStatsService.Stub.asInterface(ServiceManager
 				.getService(Context.NETWORK_STATS_SERVICE));
+		refreshPolicy();
 	}
 
 	// mTemplate = buildTemplateEthernet()
@@ -236,9 +237,7 @@ public class DataUsageHelper {
 	 */
 	public void refreshPolicy() {
 		if (mPolicyManager == null) {
-			// mPolicyManager = NetworkPolicyManager.from(context);
-			mPolicyManager = (NetworkPolicyManager) context
-					.getSystemService(Context.NETWORK_POLICY_SERVICE);
+			mPolicyManager = NetworkPolicyManager.from(context);
 		}
 		if (mPolicyEditor == null) {
 			mPolicyEditor = new NetworkPolicyEditor(mPolicyManager);
