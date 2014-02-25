@@ -72,9 +72,17 @@ public class DataUsageHelper {
 	 * @return
 	 */
 	public SparseArray<Long> getWifiData() {
+		INetworkStatsSession mStatsSession = null;
+		try {
+			mStatsSession = mStatsService.openSession();
+		} catch (RemoteException e) {
+			Log.d(TAG, "Remote Exception happens");
+		}
+		if (mStatsSession == null)
+			return null;
+
 		ChartData data = new ChartData();
 		try {
-			INetworkStatsSession mStatsSession = mStatsService.openSession();
 			data.network = mStatsSession.getHistoryForNetwork(
 					buildTemplateWifiWildcard(), FIELD_RX_BYTES
 							| FIELD_TX_BYTES);
@@ -117,6 +125,8 @@ public class DataUsageHelper {
 		entry = data.network.getValues(getUtcMonthMillis(), now, now, null);
 		map.put(KEY_RX_MONTH, entry != null ? entry.rxBytes : 0L);
 		map.put(KEY_TX_MONTH, entry != null ? entry.txBytes : 0L);
+
+		return map;
 	}
 
 	/**
