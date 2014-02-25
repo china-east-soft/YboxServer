@@ -236,7 +236,9 @@ public class DataUsageHelper {
 	 */
 	public void refreshPolicy() {
 		if (mPolicyManager == null) {
-			mPolicyManager = NetworkPolicyManager.from(context);
+			// mPolicyManager = NetworkPolicyManager.from(context);
+			mPolicyManager = (NetworkPolicyManager) context
+					.getSystemService(Context.NETWORK_POLICY_SERVICE);
 		}
 		if (mPolicyEditor == null) {
 			mPolicyEditor = new NetworkPolicyEditor(mPolicyManager);
@@ -247,7 +249,8 @@ public class DataUsageHelper {
 	}
 
 	private String getActiveSubscriberId(Context context) {
-		final TelephonyManager tele = TelephonyManager.from(context);
+		final TelephonyManager tele = (TelephonyManager) context
+				.getSystemService(Context.TELEPHONY_SERVICE);
 		final String actualSubscriberId = tele.getSubscriberId();
 		return SystemProperties.get(TEST_SUBSCRIBER_PROP, actualSubscriberId);
 	}
