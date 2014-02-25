@@ -15,20 +15,20 @@ import java.util.Locale;
 
 import android.content.Context;
 import com.mediatek.common.featureoption.FeatureOption;
-import com.mediatek.gemini.GeminiUtils;
-import com.android.settings.net.ChartData;
-import com.android.settings.net.NetworkPolicyEditor;
 import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.RemoteException;
 import android.telephony.TelephonyManager;
+import android.provider.Telephony;
+import android.provider.Telephony.SIMInfo;
 import android.net.INetworkStatsService;
 import android.net.INetworkStatsSession;
 import android.net.NetworkStatsHistory;
 import android.net.NetworkTemplate;
 import android.net.NetworkPolicy;
 import android.net.NetworkPolicyManager;
-import android.provider.Telephony.SIMInfo;
+import com.android.settings.net.ChartData;
+import com.android.settings.net.NetworkPolicyEditor;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.util.SparseArray;
@@ -105,18 +105,18 @@ public class DataUsageHelper {
 		// 获取总流量信息
 		NetworkStatsHistory.Entry entry = data.network.getValues(cycleStart,
 				cycleEndBak, now, null);
-		map.put(KEY_RX_TOTAL, entry != null ? entry.rxBytes : 0);
-		map.put(KEY_TX_TOTAL, entry != null ? entry.txBytes : 0);
+		map.put(KEY_RX_TOTAL, entry != null ? entry.rxBytes : 0L);
+		map.put(KEY_TX_TOTAL, entry != null ? entry.txBytes : 0L);
 
 		// 获取当日流量信息
 		entry = data.network.getValues(getUtcDateMillis(), now, now, null);
-		map.put(KEY_RX_TODAY, entry != null ? entry.rxBytes : 0);
-		map.put(KEY_TX_TODAY, entry != null ? entry.txBytes : 0);
+		map.put(KEY_RX_TODAY, entry != null ? entry.rxBytes : 0L);
+		map.put(KEY_TX_TODAY, entry != null ? entry.txBytes : 0L);
 
 		// 获取当月流量信息
 		entry = data.network.getValues(getUtcMonthMillis(), now, now, null);
-		map.put(KEY_RX_MONTH, entry != null ? entry.rxBytes : 0);
-		map.put(KEY_TX_MONTH, entry != null ? entry.txBytes : 0);
+		map.put(KEY_RX_MONTH, entry != null ? entry.rxBytes : 0L);
+		map.put(KEY_TX_MONTH, entry != null ? entry.txBytes : 0L);
 	}
 
 	/**
@@ -126,7 +126,6 @@ public class DataUsageHelper {
 	 */
 	public List<SparseArray<Long>> getMobileData() {
 		List<SIMInfo> mSimList = SIMInfo.getInsertedSIMList(context);
-		Collections.sort(mSimList, new GeminiUtils.SIMInfoComparable());
 		if (mSimList == null)
 			return null;
 
@@ -191,21 +190,21 @@ public class DataUsageHelper {
 			// 获取总流量信息
 			NetworkStatsHistory.Entry entry = data.network.getValues(
 					cycleStart, cycleEndBak, now, null);
-			map.put(KEY_RX_TOTAL, entry != null ? entry.rxBytes : 0);
-			map.put(KEY_TX_TOTAL, entry != null ? entry.txBytes : 0);
+			map.put(KEY_RX_TOTAL, entry != null ? entry.rxBytes : 0L);
+			map.put(KEY_TX_TOTAL, entry != null ? entry.txBytes : 0L);
 
 			// 获取当日流量信息
 			entry = data.network.getValues(getUtcDateMillis(), now, now, null);
-			map.put(KEY_RX_TODAY, entry != null ? entry.rxBytes : 0);
-			map.put(KEY_TX_TODAY, entry != null ? entry.txBytes : 0);
+			map.put(KEY_RX_TODAY, entry != null ? entry.rxBytes : 0L);
+			map.put(KEY_TX_TODAY, entry != null ? entry.txBytes : 0L);
 
 			// 获取当月流量信息
 			entry = data.network.getValues(getUtcMonthMillis(), now, now, null);
-			map.put(KEY_RX_MONTH, entry != null ? entry.rxBytes : 0);
-			map.put(KEY_TX_MONTH, entry != null ? entry.txBytes : 0);
+			map.put(KEY_RX_MONTH, entry != null ? entry.rxBytes : 0L);
+			map.put(KEY_TX_MONTH, entry != null ? entry.txBytes : 0L);
 
 			map.put(KEY_LIMIT_MONTH, mLimitBytes);
-			map.put(KEY_SIM_SLOT, siminfo.mSlot);
+			map.put(KEY_SIM_SLOT, (long)siminfo.mSlot);
 
 			list.add(map);
 		}
