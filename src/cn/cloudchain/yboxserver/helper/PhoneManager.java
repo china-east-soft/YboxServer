@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.net.TrafficStats;
 import android.util.Log;
 import cn.cloudchain.yboxserver.MyApplication;
 
@@ -82,16 +81,6 @@ public class PhoneManager {
 			Log.e(TAG, e.getMessage(), e);
 		}
 		return result;
-	}
-
-	//
-	public int getTotalTraffic() {
-		TrafficStats.getMobileTxBytes();
-		return -1;
-	}
-
-	public int getSignalStrength() {
-		return MyApplication.getInstance().signalStrength;
 	}
 
 }

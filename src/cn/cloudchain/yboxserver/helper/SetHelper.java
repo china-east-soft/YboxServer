@@ -7,12 +7,14 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.AuthAlgorithm;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.text.TextUtils;
 import android.util.JsonWriter;
 import android.util.Log;
+import android.util.SparseArray;
 import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.bean.DeviceInfo;
 import cn.cloudchain.yboxserver.bean.OperType;
@@ -24,6 +26,7 @@ public class SetHelper {
 	private static SetHelper instance;
 	private PhoneManager phoneManager;
 	private WifiApManager wifiApManager;
+	private DataUsageHelper dataUsageHelper;
 
 	private final int error_oper_invalid = 1;
 	private final int error_json_invalid = 2;
@@ -39,8 +42,10 @@ public class SetHelper {
 	}
 
 	private SetHelper() {
-		phoneManager = new PhoneManager(MyApplication.getAppContext());
-		wifiApManager = new WifiApManager(MyApplication.getAppContext());
+		final Context context = MyApplication.getAppContext();
+		phoneManager = new PhoneManager(context);
+		wifiApManager = new WifiApManager(context);
+		dataUsageHelper = new DataUsageHelper(context);
 	}
 
 	public String handleJsonRequest(String operation) {
@@ -122,6 +127,8 @@ public class SetHelper {
 					int time = params.optInt("time");
 					result = setWifiAutoDisable(time);
 				}
+			} else if (OperType.mobile_traffic_info.getValue() == oper) {
+				result = getMobileTrafficInfo();
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -201,6 +208,61 @@ public class SetHelper {
 	 */
 	private String setMobileDataEnable(boolean enable) {
 		return getDefaultJson(phoneManager.setMobileDataEnabled(enable));
+	}
+
+	/**
+	 * 获取手机流量信息
+	 * 
+	 * @return {"result":true, "data": [{"slot": 12, "rx":{"today":12444142,
+	 *         "month":122552525, "total":28881234434}, "tx":{"today": 12,
+	 *         "month":12, "total":12}}]}
+	 */
+	private String getMobileTrafficInfo() {
+		List<SparseArray<Long>> list = dataUsageHelper.getMobileData();
+		if (list == null)
+			return getErrorJson(201, "no SIM available");
+
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(true).name("data");
+			jWriter.beginArray();
+			for (SparseArray<Long> item : list) {
+				int slot = item.get(DataUsageHelper.KEY_SIM_SLOT).intValue();
+				jWriter.beginObject();
+				jWriter.name("slot").value(slot);
+				jWriter.name("rx").beginObject();
+				jWriter.name("today").value(
+						item.get(DataUsageHelper.KEY_RX_TODAY));
+				jWriter.name("month").value(
+						item.get(DataUsageHelper.KEY_RX_MONTH));
+				jWriter.name("total").value(
+						item.get(DataUsageHelper.KEY_RX_TOTAL));
+				jWriter.endObject();
+				jWriter.name("tx").beginObject();
+				jWriter.name("today").value(
+						item.get(DataUsageHelper.KEY_TX_TODAY));
+				jWriter.name("month").value(
+						item.get(DataUsageHelper.KEY_TX_MONTH));
+				jWriter.name("total").value(
+						item.get(DataUsageHelper.KEY_TX_TOTAL));
+				jWriter.endObject();
+				jWriter.endObject();
+			}
+			jWriter.endArray();
+			jWriter.endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
 	}
 
 	/**

@@ -5,7 +5,8 @@ public enum OperType {
 			104), wifi_devices(105), wifi_blacklist_add(106), wifi_blacklist_clear(
 			107), signal_quality(108), traffic(109), storage(110), ethernet_info(
 			111), ethernet_dhcp_set(112), ethernet_static_set(113), wifi_restart(
-			114), wifi_auto_disable_info(115), wifi_auto_disable_set(116);
+			114), wifi_auto_disable_info(115), wifi_auto_disable_set(116), mobile_traffic_info(
+			117);
 
 	private int value;
 
