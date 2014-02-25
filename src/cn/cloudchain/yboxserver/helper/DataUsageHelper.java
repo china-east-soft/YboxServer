@@ -38,7 +38,7 @@ public class DataUsageHelper {
 
 	private Context context;
 	private INetworkStatsService mStatsService;
-	private INetworkStatsSession mStatsSession;
+	// private INetworkStatsSession mStatsSession;
 	private NetworkPolicyEditor mPolicyEditor;
 	private NetworkPolicyManager mPolicyManager;
 
@@ -60,7 +60,6 @@ public class DataUsageHelper {
 		refreshPolicy();
 		mStatsService = INetworkStatsService.Stub.asInterface(ServiceManager
 				.getService(Context.NETWORK_STATS_SERVICE));
-		mStatsSession = mStatsService.openSession();
 	}
 
 	// mTemplate = buildTemplateEthernet()
@@ -75,6 +74,7 @@ public class DataUsageHelper {
 	public SparseArray<Long> getWifiData() {
 		ChartData data = new ChartData();
 		try {
+			INetworkStatsSession mStatsSession = mStatsService.openSession();
 			data.network = mStatsSession.getHistoryForNetwork(
 					buildTemplateWifiWildcard(), FIELD_RX_BYTES
 							| FIELD_TX_BYTES);
@@ -128,6 +128,13 @@ public class DataUsageHelper {
 		List<SIMInfo> mSimList = SIMInfo.getInsertedSIMList(context);
 		if (mSimList == null)
 			return null;
+
+		try {
+			INetworkStatsSession mStatsSession = mStatsService.openSession();
+		} catch (RemoteException e) {
+			Log.d(TAG, "Remote Exception happens");
+			return null;
+		}
 
 		List<SparseArray<Long>> list = new ArrayList<SparseArray<Long>>(
 				mSimList.size());
@@ -204,7 +211,7 @@ public class DataUsageHelper {
 			map.put(KEY_TX_MONTH, entry != null ? entry.txBytes : 0L);
 
 			map.put(KEY_LIMIT_MONTH, mLimitBytes);
-			map.put(KEY_SIM_SLOT, (long)siminfo.mSlot);
+			map.put(KEY_SIM_SLOT, (long) siminfo.mSlot);
 
 			list.add(map);
 		}
