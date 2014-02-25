@@ -213,7 +213,7 @@ public class SetHelper {
 	/**
 	 * 获取手机流量信息
 	 * 
-	 * @return {"result":true, "data": [{"slot": 12, "rx":{"today":12444142,
+	 * @return {"result":true, "limit": 2122, "data": [{"slot": 12, "rx":{"today":12444142,
 	 *         "month":122552525, "total":28881234434}, "tx":{"today": 12,
 	 *         "month":12, "total":12}}]}
 	 */
@@ -231,6 +231,8 @@ public class SetHelper {
 				int slot = item.get(DataUsageHelper.KEY_SIM_SLOT).intValue();
 				jWriter.beginObject();
 				jWriter.name("slot").value(slot);
+				jWriter.name("limit").value(
+						item.get(DataUsageHelper.KEY_LIMIT_MONTH));
 				jWriter.name("rx").beginObject();
 				jWriter.name("today").value(
 						item.get(DataUsageHelper.KEY_RX_TODAY));
@@ -279,7 +281,7 @@ public class SetHelper {
 		if (TextUtils.isEmpty(pass)) {
 			wifiConfig.allowedKeyManagement.set(KeyMgmt.NONE);
 		} else {
-			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA_PSK);
+			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA2_PSK);
 			wifiConfig.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
 			wifiConfig.preSharedKey = pass;
 		}
