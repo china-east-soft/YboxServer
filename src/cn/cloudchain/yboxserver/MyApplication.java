@@ -23,6 +23,7 @@ public class MyApplication extends Application {
 	public boolean isBatteryLow = false;
 	public int signalStrength = -1;
 	public boolean isEthernet = false;
+	public long clientUpdateTime = 0L;
 
 	@Override
 	public void onCreate() {
@@ -30,7 +31,7 @@ public class MyApplication extends Application {
 		instance = this;
 		Log.i(TAG, "onCreate");
 
-		isEthernet = BSPSystem.getInstance().getConnected();
+		isEthernet = new BSPSystem(this).getConnected();
 
 		new Thread(new Runnable() {
 
