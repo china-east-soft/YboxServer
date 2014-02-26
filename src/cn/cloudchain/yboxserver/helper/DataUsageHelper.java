@@ -53,7 +53,8 @@ public class DataUsageHelper {
 	public static final int KEY_TX_TOTAL = 21;
 	public static final int KEY_RX_MONTH = 30;
 	public static final int KEY_TX_MONTH = 31;
-	public static final int KEY_LIMIT_MONTH = 40;
+	public static final int KEY_LIMIT = 40;
+	public static final int KEY_WARNING = 41;
 	public static final int KEY_SIM_SLOT = 50;
 
 	public DataUsageHelper(Context context) {
@@ -164,10 +165,12 @@ public class DataUsageHelper {
 			}
 
 			long mLimitBytes = POLICY_NULL_FLAG;
+			long mWarningBytes = POLICY_NULL_FLAG;
 			try {
 				data.network = mStatsSession.getHistoryForNetwork(template,
 						FIELD_RX_BYTES | FIELD_TX_BYTES);
 				mLimitBytes = mPolicyEditor.getPolicyLimitBytes(template);
+				mWarningBytes = mPolicyEditor.getPolicyWarningBytes(template);
 			} catch (Exception e) {
 				continue;
 			}
@@ -222,7 +225,8 @@ public class DataUsageHelper {
 			map.put(KEY_RX_MONTH, entry != null ? entry.rxBytes : 0L);
 			map.put(KEY_TX_MONTH, entry != null ? entry.txBytes : 0L);
 
-			map.put(KEY_LIMIT_MONTH, mLimitBytes);
+			map.put(KEY_LIMIT, mLimitBytes);
+			map.put(KEY_WARNING, mWarningBytes);
 			map.put(KEY_SIM_SLOT, (long) siminfo.mSlot);
 
 			list.add(map);
@@ -230,6 +234,24 @@ public class DataUsageHelper {
 
 		return list;
 
+	}
+
+	/**
+	 * 设置警告大小
+	 * 
+	 * @param slot
+	 * @param warningBytes
+	 * @return
+	 */
+	public boolean setPolicyWarningBytes(int slot, long warningBytes) {
+		NetworkTemplate template;
+		if (FeatureOption.MTK_GEMINI_SUPPORT) {
+			template = buildTemplateMobileAll(getSubscriberId(context, slot));
+		} else {
+			template = buildTemplateMobileAll(getActiveSubscriberId(context));
+		}
+
+		mPolicyEditor.setPolicyWarningBytes(template, warningBytes);
 	}
 
 	/**
