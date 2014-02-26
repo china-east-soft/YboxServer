@@ -16,6 +16,8 @@ public class BatteryInfoBroadcastReceiver extends BroadcastReceiver {
 			MyApplication.getInstance().battery = level;
 		} else if (Intent.ACTION_BATTERY_LOW.equals(intent.getAction())) {
 			MyApplication.getInstance().isBatteryLow = true;
+		} else if (Intent.ACTION_BATTERY_OKAY.equals(intent.getAction())) {
+			MyApplication.getInstance().isBatteryLow = false;
 		}
 
 	}
