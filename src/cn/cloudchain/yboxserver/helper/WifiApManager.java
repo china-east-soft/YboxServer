@@ -189,9 +189,20 @@ public class WifiApManager {
 	 * 
 	 * @return
 	 */
-	public boolean setMaxClientNum() {
+	public boolean setMaxClientNum(int num) {
 		return System.putInt(context.getContentResolver(),
-				System.WIFI_HOTSPOT_MAX_CLIENT_NUM, 10);
+				System.WIFI_HOTSPOT_MAX_CLIENT_NUM, num);
+	}
+
+	/**
+	 * 获取最大支持的设备数
+	 * 
+	 * @return
+	 */
+	public int getMaxClientNum() {
+		return System.getInt(context.getContentResolver(),
+				System.WIFI_HOTSPOT_MAX_CLIENT_NUM,
+				System.WIFI_HOTSPOT_DEFAULT_CLIENT_NUM);
 	}
 
 	/**
@@ -211,9 +222,9 @@ public class WifiApManager {
 	 * @return
 	 */
 	public int getWifiAutoDisable() {
-			return System.getInt(context.getContentResolver(),
-					System.WIFI_HOTSPOT_AUTO_DISABLE,
-					System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS);
+		return System.getInt(context.getContentResolver(),
+				System.WIFI_HOTSPOT_AUTO_DISABLE,
+				System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS);
 	}
 
 	// public static final String WIFI_HOTSPOT_AUTO_DISABLE =
