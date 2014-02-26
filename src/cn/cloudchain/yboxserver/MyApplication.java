@@ -54,6 +54,7 @@ public class MyApplication extends Application {
 		IntentFilter batteryFilter = new IntentFilter();
 		batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
 		batteryFilter.addAction(Intent.ACTION_BATTERY_LOW);
+		batteryFilter.addAction(Intent.ACTION_BATTERY_OKAY);
 		registerReceiver(new BatteryInfoBroadcastReceiver(), batteryFilter);
 
 		TelephonyManager telManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
