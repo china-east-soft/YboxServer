@@ -123,19 +123,19 @@ public class UdpServer extends Service {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("wifi_mode");
+			jWriter.beginObject().name("conn");
 			if (MyApplication.getInstance().isEthernet) {
-				jWriter.value("wlan");
+				jWriter.value(1);
 			} else if (phoneManager.isMobileDataEnabled()) {
-				jWriter.value("3g");
+				jWriter.value(2);
 			} else {
-				jWriter.value("");
+				jWriter.value(0);
 			}
 			if (MyApplication.getInstance().isBatteryLow) {
 				jWriter.name("battery_low").value(true);
 			}
-			jWriter.name("version").value(
-					Helper.getInstance().getVersionName(this));
+			jWriter.name("clients_update_time").value(
+					MyApplication.getInstance().clientUpdateTime);
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
