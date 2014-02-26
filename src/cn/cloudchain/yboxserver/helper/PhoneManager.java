@@ -28,9 +28,10 @@ public class PhoneManager {
 	public boolean shutdown(boolean restart) {
 		boolean result = false;
 		try {
-			Intent intent = new Intent(restart ? Intent.ACTION_REBOOT
-					: Intent.ACTION_SHUTDOWN);
-			context.sendBroadcast(intent);
+			Intent intent = new Intent(Intent.ACTION_REQUEST_SHUTDOWN);
+			intent.putExtra(Intent.EXTRA_KEY_CONFIRM, false);
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			context.startActivity(intent);
 			result = true;
 		} catch (Exception e) {
 			e.printStackTrace();
