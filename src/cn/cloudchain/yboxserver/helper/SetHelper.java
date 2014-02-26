@@ -27,6 +27,7 @@ public class SetHelper {
 	private PhoneManager phoneManager;
 	private WifiApManager wifiApManager;
 	private DataUsageHelper dataUsageHelper;
+	private BSPSystem bspSystem;
 
 	private final int error_oper_invalid = 1;
 	private final int error_json_invalid = 2;
@@ -46,6 +47,7 @@ public class SetHelper {
 		phoneManager = new PhoneManager(context);
 		wifiApManager = new WifiApManager(context);
 		dataUsageHelper = new DataUsageHelper(context);
+		bspSystem = new BSPSystem(context);
 	}
 
 	public String handleJsonRequest(String operation) {
@@ -72,7 +74,9 @@ public class SetHelper {
 				} else {
 					String ssid = params.optString("ssid");
 					String pass = params.optString("pass");
-					result = setWifiInfo(ssid, pass);
+					int keymgmt = params.optInt("keymgmt", -1);
+					int maxclient = params.optInt("maxclient", -1);
+					result = setWifiInfo(ssid, pass, keymgmt, maxclient);
 				}
 			} else if (OperType.wifi_devices.getValue() == oper) {
 				result = getDevices();
@@ -213,9 +217,9 @@ public class SetHelper {
 	/**
 	 * 获取手机流量信息
 	 * 
-	 * @return {"result":true, "limit": 2122, "data": [{"slot": 12, "rx":{"today":12444142,
-	 *         "month":122552525, "total":28881234434}, "tx":{"today": 12,
-	 *         "month":12, "total":12}}]}
+	 * @return {"result":true, "data": [{"slot": 12, "limit": 2122, "warn":123,
+	 *         "today":{"rx":1, "tx":1},
+	 *         "month":{"rx":1,"tx":1},"total":{"rx":1;"tx":1}]}
 	 */
 	private String getMobileTrafficInfo() {
 		List<SparseArray<Long>> list = dataUsageHelper.getMobileData();
@@ -231,24 +235,32 @@ public class SetHelper {
 				int slot = item.get(DataUsageHelper.KEY_SIM_SLOT).intValue();
 				jWriter.beginObject();
 				jWriter.name("slot").value(slot);
-				jWriter.name("limit").value(
-						item.get(DataUsageHelper.KEY_LIMIT_MONTH));
-				jWriter.name("rx").beginObject();
-				jWriter.name("today").value(
-						item.get(DataUsageHelper.KEY_RX_TODAY));
-				jWriter.name("month").value(
-						item.get(DataUsageHelper.KEY_RX_MONTH));
-				jWriter.name("total").value(
-						item.get(DataUsageHelper.KEY_RX_TOTAL));
+				jWriter.name("limit")
+						.value(item.get(DataUsageHelper.KEY_LIMIT));
+				jWriter.name("warn").value(
+						item.get(DataUsageHelper.KEY_WARNING));
+
+				jWriter.name("today").beginObject();
+				jWriter.name("rx")
+						.value(item.get(DataUsageHelper.KEY_RX_TODAY));
+				jWriter.name("tx")
+						.value(item.get(DataUsageHelper.KEY_TX_TODAY));
 				jWriter.endObject();
-				jWriter.name("tx").beginObject();
-				jWriter.name("today").value(
-						item.get(DataUsageHelper.KEY_TX_TODAY));
-				jWriter.name("month").value(
-						item.get(DataUsageHelper.KEY_TX_MONTH));
-				jWriter.name("total").value(
-						item.get(DataUsageHelper.KEY_TX_TOTAL));
+
+				jWriter.name("month").beginObject();
+				jWriter.name("rx")
+						.value(item.get(DataUsageHelper.KEY_RX_MONTH));
+				jWriter.name("tx")
+						.value(item.get(DataUsageHelper.KEY_TX_MONTH));
 				jWriter.endObject();
+
+				jWriter.name("total").beginObject();
+				jWriter.name("rx")
+						.value(item.get(DataUsageHelper.KEY_RX_TOTAL));
+				jWriter.name("tx")
+						.value(item.get(DataUsageHelper.KEY_TX_TOTAL));
+				jWriter.endObject();
+
 				jWriter.endObject();
 			}
 			jWriter.endArray();
@@ -272,22 +284,46 @@ public class SetHelper {
 	 * 
 	 * @param ssid
 	 * @param pass
+	 * @param keymgmt
+	 * @param maxclient
 	 * @return
 	 */
-	private String setWifiInfo(String ssid, String pass) {
+	private String setWifiInfo(String ssid, String pass, int keymgmt,
+			int maxclient) {
 		Log.i(TAG, "ssid = " + ssid + "; pass = " + pass);
-		WifiConfiguration wifiConfig = new WifiConfiguration();
+		WifiConfiguration wifiConfig = wifiApManager.getWifiApConfiguration();
 		wifiConfig.SSID = ssid;
-		if (TextUtils.isEmpty(pass)) {
+		switch (keymgmt) {
+		case 0:
 			wifiConfig.allowedKeyManagement.set(KeyMgmt.NONE);
-		} else {
+			break;
+		case 1:
+			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA_PSK);
+			wifiConfig.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
+			if (!TextUtils.isEmpty(pass)) {
+				wifiConfig.preSharedKey = pass;
+			}
+			break;
+		case 2:
 			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA2_PSK);
 			wifiConfig.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
-			wifiConfig.preSharedKey = pass;
+			if (!TextUtils.isEmpty(pass)) {
+				wifiConfig.preSharedKey = pass;
+			}
+			break;
 		}
 		wifiConfig.status = WifiConfiguration.Status.ENABLED;
 		wifiConfig.hiddenSSID = false;
-		return getDefaultJson(wifiApManager.setWifiApConfiguration(wifiConfig));
+
+		boolean result = true;
+		if (maxclient > 0) {
+			result = wifiApManager.setMaxClientNum(maxclient);
+		}
+		if (result) {
+			result = wifiApManager.setWifiApConfiguration(wifiConfig);
+		}
+
+		return getDefaultJson(result);
 	}
 
 	/**
@@ -305,9 +341,14 @@ public class SetHelper {
 		try {
 			jWriter.beginObject().name("result").value(true).name("ssid")
 					.value(config.SSID);
+
 			if (!config.allowedKeyManagement.get(KeyMgmt.NONE)) {
 				jWriter.name("pass").value(config.preSharedKey);
 			}
+			jWriter.name("keymgmt").value(getSecurityTypeIndex(config));
+			jWriter.name("autodisable").value(
+					wifiApManager.getWifiAutoDisable());
+			jWriter.name("maxclient").value(wifiApManager.getMaxClientNum());
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -321,6 +362,21 @@ public class SetHelper {
 			}
 		}
 		return sw.toString();
+	}
+
+	/**
+	 * 获取加密方式的index
+	 * 
+	 * @param wifiConfig
+	 * @return NONE = 0, WPA = 1, WPA2 = 2
+	 */
+	private int getSecurityTypeIndex(WifiConfiguration wifiConfig) {
+		if (wifiConfig.allowedKeyManagement.get(KeyMgmt.WPA_PSK)) {
+			return 1;
+		} else if (wifiConfig.allowedKeyManagement.get(KeyMgmt.WPA2_PSK)) {
+			return 2;
+		}
+		return 0;
 	}
 
 	/**
@@ -424,7 +480,7 @@ public class SetHelper {
 	/**
 	 * 获取以太网信息
 	 * 
-	 * @return
+	 * @return "mode":-1(none)|1(static)|2(dtcp)
 	 */
 	private String getEthInfo() {
 		StringBuffer ip = new StringBuffer();
@@ -432,16 +488,16 @@ public class SetHelper {
 		StringBuffer mask = new StringBuffer();
 		StringBuffer dns1 = new StringBuffer();
 		StringBuffer dns2 = new StringBuffer();
-		boolean result = BSPSystem.getInstance().getEthernetInfo(ip, gw, mask,
-				dns1, dns2);
+		boolean result = bspSystem.getEthernetInfo(ip, gw, mask, dns1, dns2);
 
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("result").value(result);
 			if (result) {
+				jWriter.name("mode").value(bspSystem.getEthernetMode());
 				jWriter.name("ip").value(ip.toString());
-				jWriter.name("gatewap").value(gw.toString());
+				jWriter.name("gateway").value(gw.toString());
 				jWriter.name("mask").value(mask.toString());
 				jWriter.name("dns1").value(dns1.toString());
 				jWriter.name("dns2").value(dns2.toString());
@@ -473,8 +529,8 @@ public class SetHelper {
 	 */
 	private String setEthStatic(String ip, String gateway, String mask,
 			String dns1, String dns2) {
-		return getDefaultJson(BSPSystem.setEthernetStatic(
-				MyApplication.getAppContext(), ip, gateway, mask, dns1, dns2));
+		return getDefaultJson(bspSystem.setEthernetStatic(ip, gateway, mask,
+				dns1, dns2));
 	}
 
 	/**
@@ -483,8 +539,7 @@ public class SetHelper {
 	 * @return
 	 */
 	private String setEthDhcp() {
-		return getDefaultJson(BSPSystem.setEthernetDHCP(MyApplication
-				.getAppContext()));
+		return getDefaultJson(bspSystem.setEthernetDHCP());
 	}
 
 	/**
