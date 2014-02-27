@@ -3,12 +3,14 @@ package cn.cloudchain.yboxserver.receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.helper.WifiApManager;
 
 public class WifiApStateChangeReceiver extends BroadcastReceiver {
 	final String TAG = WifiApStateChangeReceiver.class.getSimpleName();
+	private final static String ACTION_SIM_STATE_CHANGED = "android.intent.action.SIM_STATE_CHANGED";
 	private final String ACTION_ETHERNET_STATE_CHANGED = "android.net.conn.CONNECTIVITY_CHANGE";
 	private final String EXTRA_ETH_STATUS = "eth_status";
 	private final String EXTRA_ETH_LINK = "eth_link";
@@ -31,6 +33,19 @@ public class WifiApStateChangeReceiver extends BroadcastReceiver {
 				MyApplication.getInstance().isEthernet = true;
 			} else {
 				MyApplication.getInstance().isEthernet = false;
+			}
+		} else if (ACTION_SIM_STATE_CHANGED.equals(action)) {
+			TelephonyManager teleManager = (TelephonyManager) context
+					.getSystemService(Context.TELEPHONY_SERVICE);
+			int state = teleManager.getSimState();
+			Log.i(TAG, "telemanager state = " + state);
+			switch(state) {
+			case TelephonyManager.SIM_STATE_READY:
+				MyApplication.getInstance().isSIMReady = true;
+				break;
+			default:
+				MyApplication.getInstance().isSIMReady = false;
+				break;
 			}
 		}
 

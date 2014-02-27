@@ -23,6 +23,7 @@ public class MyApplication extends Application {
 	public boolean isBatteryLow = false;
 	public int signalStrength = -1;
 	public boolean isEthernet = false;
+	public boolean isSIMReady = false;
 	public long clientUpdateTime = 0L;
 
 	@Override

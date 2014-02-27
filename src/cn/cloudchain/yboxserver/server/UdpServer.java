@@ -126,10 +126,12 @@ public class UdpServer extends Service {
 			jWriter.beginObject().name("conn");
 			if (MyApplication.getInstance().isEthernet) {
 				jWriter.value(1);
+			} else if (!MyApplication.getInstance().isSIMReady) {
+				jWriter.value(0);
 			} else if (phoneManager.isMobileDataEnabled()) {
 				jWriter.value(2);
 			} else {
-				jWriter.value(0);
+				jWriter.value(3);
 			}
 			if (MyApplication.getInstance().isBatteryLow) {
 				jWriter.name("battery_low").value(true);
