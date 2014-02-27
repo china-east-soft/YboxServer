@@ -244,14 +244,17 @@ public class DataUsageHelper {
 	 * @return
 	 */
 	public boolean setPolicyWarningBytes(int slot, long warningBytes) {
-		NetworkTemplate template;
+		NetworkTemplate template = null;
 		if (FeatureOption.MTK_GEMINI_SUPPORT) {
 			template = buildTemplateMobileAll(getSubscriberId(context, slot));
 		} else {
 			template = buildTemplateMobileAll(getActiveSubscriberId(context));
 		}
-
+		if (template == null) {
+			return false;
+		}
 		mPolicyEditor.setPolicyWarningBytes(template, warningBytes);
+		return true;
 	}
 
 	/**
