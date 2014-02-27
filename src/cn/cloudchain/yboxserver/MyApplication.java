@@ -10,6 +10,7 @@ import android.net.wifi.WifiConfiguration;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import cn.cloudchain.yboxserver.helper.PhoneManager;
 import cn.cloudchain.yboxserver.helper.WifiApManager;
 import cn.cloudchain.yboxserver.receiver.BatteryInfoBroadcastReceiver;
 import cn.cloudchain.yboxserver.receiver.PhoneStateMonitor;
@@ -33,6 +34,7 @@ public class MyApplication extends Application {
 		Log.i(TAG, "onCreate");
 
 		isEthernet = new BSPSystem(this).getConnected();
+		isSIMReady = new PhoneManager(this).isSIMReady();
 
 		new Thread(new Runnable() {
 

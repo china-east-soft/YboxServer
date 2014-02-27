@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import cn.cloudchain.yboxserver.MyApplication;
 
@@ -82,6 +83,13 @@ public class PhoneManager {
 			Log.e(TAG, e.getMessage(), e);
 		}
 		return result;
+	}
+
+	public boolean isSIMReady() {
+		TelephonyManager teleManager = (TelephonyManager) context
+				.getSystemService(Context.TELEPHONY_SERVICE);
+		Log.i(TAG, "sim state = " + teleManager.getSimState());
+		return teleManager.getSimState() == TelephonyManager.SIM_STATE_READY;
 	}
 
 }
