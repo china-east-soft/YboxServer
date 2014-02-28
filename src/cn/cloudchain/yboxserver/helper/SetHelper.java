@@ -17,6 +17,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.bean.DeviceInfo;
+import cn.cloudchain.yboxserver.bean.ErrorBean;
 import cn.cloudchain.yboxserver.bean.OperType;
 
 import com.ybox.hal.BSPSystem;
@@ -28,9 +29,6 @@ public class SetHelper {
 	private WifiApManager wifiApManager;
 	private DataUsageHelper dataUsageHelper;
 	private BSPSystem bspSystem;
-
-	private final int error_oper_invalid = 1;
-	private final int error_json_invalid = 2;
 
 	/*
 	 * 一般错误 1 空字符串 2
@@ -51,7 +49,7 @@ public class SetHelper {
 	}
 
 	public String handleJsonRequest(String operation) {
-		String result = getErrorJson(error_oper_invalid, null);
+		String result = getErrorJson(ErrorBean.OPER_NOT_EXIST);
 		if (TextUtils.isEmpty(operation)) {
 			return result;
 		}
@@ -60,58 +58,19 @@ public class SetHelper {
 			int oper = obj.optInt("oper");
 			JSONObject params = obj.optJSONObject("params");
 
-			if (OperType.shutdown.getValue() == oper) {
-				boolean restart = params == null ? false : params.optBoolean(
-						"restart", false);
-				result = shutdown(restart);
-			} else if (OperType.battery.getValue() == oper) {
+			switch (OperType.getOperType(oper)) {
+			case battery:
 				result = getBattery();
-			} else if (OperType.wifi_info.getValue() == oper) {
-				result = getWifiInfo();
-			} else if (OperType.wifi_info_set.getValue() == oper) {
-				if (params == null) {
-					result = getErrorJson(104, "with no params!");
-				} else {
-					String ssid = params.optString("ssid");
-					String pass = params.optString("pass");
-					int keymgmt = params.optInt("keymgmt", -1);
-					int maxclient = params.optInt("maxclient", -1);
-					result = setWifiInfo(ssid, pass, keymgmt, maxclient);
-				}
-			} else if (OperType.wifi_devices.getValue() == oper) {
-				result = getDevices();
-			} else if (OperType.wifi_blacklist_add.getValue() == oper) {
-				if (params == null) {
-					result = getErrorJson(104, "with no params!");
-				} else {
-					String mac = params.optString("mac");
-					result = addToBlackList(mac);
-				}
-			} else if (OperType.wifi_blacklist_clear.getValue() == oper) {
-				if (params == null) {
-					result = getErrorJson(104, "with no params!");
-				} else {
-					String mac = params.optString("mac");
-					result = clearBlackList(mac);
-				}
-			} else if (OperType.mobile_data_control.getValue() == oper) {
-				if (params == null) {
-					result = getErrorJson(104, "with no params!");
-				} else {
-					boolean enable = params.optBoolean("enable");
-					result = setMobileDataEnable(enable);
-				}
-			} else if (OperType.signal_quality.getValue() == oper) {
-				result = getSignalQuality();
-			} else if (OperType.storage.getValue() == oper) {
-				result = getStorageDetail();
-			} else if (OperType.ethernet_info.getValue() == oper) {
-				result = getEthInfo();
-			} else if (OperType.ethernet_dhcp_set.getValue() == oper) {
+				break;
+			case ethernet_dhcp_set:
 				result = setEthDhcp();
-			} else if (OperType.ethernet_static_set.getValue() == oper) {
+				break;
+			case ethernet_info:
+				result = getEthInfo();
+				break;
+			case ethernet_static_set:
 				if (params == null) {
-					result = getErrorJson(104, "with no params!");
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
 					String ip = params.optString("ip");
 					String gateway = params.optString("gateway");
@@ -120,23 +79,90 @@ public class SetHelper {
 					String dns2 = params.optString("dns2");
 					result = setEthStatic(ip, gateway, mask, dns1, dns2);
 				}
-			} else if (OperType.wifi_restart.getValue() == oper) {
-				result = restartWifiAp();
-			} else if (OperType.wifi_auto_disable_info.getValue() == oper) {
-				result = getWifiAutoDisable();
-			} else if (OperType.wifi_auto_disable_set.getValue() == oper) {
+				break;
+			case mobile_data_control:
 				if (params == null) {
-					result = getErrorJson(104, "with no params!");
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					boolean enable = params.optBoolean("enable");
+					result = setMobileDataEnable(enable);
+				}
+				break;
+			case mobile_net_info:
+				result = getMobileNetInfo();
+				break;
+			case mobile_traffic_info:
+				result = getMobileTrafficInfo();
+				break;
+			case shutdown:
+				result = shutdown(false);
+				break;
+			case signal_quality:
+				result = getSignalQuality();
+				break;
+			case sleep:
+				result = goToSleep();
+				break;
+			case storage:
+				result = getStorageDetail();
+				break;
+			case traffic:
+				break;
+			case wifi_auto_disable_info:
+				result = getWifiAutoDisable();
+				break;
+			case wifi_auto_disable_set:
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
 					int time = params.optInt("time");
 					result = setWifiAutoDisable(time);
 				}
-			} else if (OperType.mobile_traffic_info.getValue() == oper) {
-				result = getMobileTrafficInfo();
+				break;
+			case wifi_blacklist_add:
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					String mac = params.optString("mac");
+					result = addToBlackList(mac);
+				}
+				break;
+			case wifi_blacklist_clear:
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					String mac = params.optString("mac");
+					result = clearBlackList(mac);
+				}
+				break;
+			case wifi_devices:
+				result = getDevices();
+				break;
+			case wifi_info:
+				result = getWifiInfo();
+				break;
+			case wifi_info_set: {
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					String ssid = params.optString("ssid");
+					String pass = params.optString("pass");
+					int keymgmt = params.optInt("keymgmt", -1);
+					int maxclient = params.optInt("maxclient", -1);
+					result = setWifiInfo(ssid, pass, keymgmt, maxclient);
+				}
+			}
+				break;
+			case wifi_restart:
+				result = restartWifiAp();
+				break;
+			default:
+				break;
+
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
-			result = getErrorJson(error_json_invalid, "json exception");
+			result = getErrorJson(ErrorBean.REQUEST_FORMAT_WRONG);
 		}
 		return result;
 	}
@@ -224,7 +250,7 @@ public class SetHelper {
 	private String getMobileTrafficInfo() {
 		List<SparseArray<Long>> list = dataUsageHelper.getMobileData();
 		if (list == null)
-			return getErrorJson(201, "no SIM available");
+			return getErrorJson(ErrorBean.SIM_NOT_READY);
 
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
@@ -450,7 +476,7 @@ public class SetHelper {
 	private String getStorageDetail() {
 		double totalSize = Helper.getInstance().getSDcardTotalMemory();
 		if (totalSize < 0) {
-			return getErrorJson(1, "sdcard not available");
+			return getErrorJson(ErrorBean.SD_NOT_READY);
 		}
 		double availableSize = Helper.getInstance().getSDcardAvailableMemory();
 
@@ -543,6 +569,58 @@ public class SetHelper {
 	}
 
 	/**
+	 * 获取SIM卡网络信息
+	 * 
+	 * @return
+	 */
+	private String getMobileNetInfo() {
+		if (!MyApplication.getInstance().isSIMReady) {
+			return getErrorJson(ErrorBean.SIM_NOT_READY);
+		}
+		StringBuffer ip = new StringBuffer();
+		StringBuffer gw = new StringBuffer();
+		StringBuffer mask = new StringBuffer();
+		StringBuffer dns1 = new StringBuffer();
+		StringBuffer dns2 = new StringBuffer();
+		boolean result = bspSystem.getSIMInfo(ip, gw, mask, dns1, dns2);
+
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(result);
+			if (result) {
+				jWriter.name("ip").value(ip.toString());
+				jWriter.name("gateway").value(gw.toString());
+				jWriter.name("mask").value(mask.toString());
+				jWriter.name("dns1").value(dns1.toString());
+				jWriter.name("dns2").value(dns2.toString());
+			}
+			jWriter.endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
+	}
+
+	/**
+	 * 让系统休眠
+	 * 
+	 * @return
+	 */
+	private String goToSleep() {
+		bspSystem.goToSleep();
+		return getDefaultJson(true);
+	}
+
+	/**
 	 * 重启热点
 	 * 
 	 * @return
@@ -596,11 +674,9 @@ public class SetHelper {
 	 * 
 	 * @param code
 	 *            可选，值<0时不显示
-	 * @param msg
-	 *            可选，为空时不显示
 	 * @return
 	 */
-	private String getErrorJson(int code, String msg) {
+	private String getErrorJson(int code) {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
@@ -608,6 +684,7 @@ public class SetHelper {
 			if (code > 0) {
 				jWriter.name("error_code").value(code);
 			}
+			String msg = ErrorBean.getInstance().getErrorMsg(code);
 			if (!TextUtils.isEmpty(msg)) {
 				jWriter.name("error_msg").value(msg);
 			}
