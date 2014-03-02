@@ -52,6 +52,12 @@
             <intent-filter>
                 <action android:name="android.intent.action.SIM_STATE_CHANGED"/>
             </intent-filter>
+             <intent-filter>
+                <action android:name="android.intent.action.SCREEN_ON"/>
+            </intent-filter>
+             <intent-filter>
+                <action android:name="android.intent.action.SCREEN_OFF"/>
+            </intent-filter>
         </receiver>
     </application>
 
