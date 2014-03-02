@@ -6,7 +6,7 @@ public enum OperType {
 			107), signal_quality(108), traffic(109), storage(110), ethernet_info(
 			111), ethernet_dhcp_set(112), ethernet_static_set(113), wifi_restart(
 			114), wifi_auto_disable_info(115), wifi_auto_disable_set(116), mobile_traffic_info(
-			117), sleep(118), mobile_net_info(119);
+			117), sleep(118), mobile_net_info(119), auto_sleep_set(120), auto_sleep_info(121);
 
 	private int value;
 
@@ -80,6 +80,12 @@ public enum OperType {
 			break;
 		case 119:
 			result = OperType.mobile_net_info;
+			break;
+		case 120:
+			result = OperType.auto_sleep_set;
+			break;
+		case 121:
+			result = OperType.auto_sleep_info;
 			break;
 		}
 		return result;

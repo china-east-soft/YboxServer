@@ -159,13 +159,18 @@ public class WifiApManager {
 		}
 		return result;
 	}
+	
+	public static final int DEVICES_BLOCK = 0;
+	public static final int DEVICES_UNBLOCK = 1;
+	public static final int DEVICES_ALL = 2;
 
 	/**
 	 * 返回所有连接的设备信息
 	 * 
+	 * @param type 
 	 * @return 不为null
 	 */
-	public List<DeviceInfo> getDeviceList() {
+	public List<DeviceInfo> getDeviceList(int type) {
 		List<HotspotClient> mClientList = mWifiManager.getHotspotClients();
 		if (mClientList == null) {
 			return null;
@@ -173,6 +178,11 @@ public class WifiApManager {
 		List<DeviceInfo> deviceList = new ArrayList<DeviceInfo>(
 				mClientList.size());
 		for (HotspotClient client : mClientList) {
+			if(client.isBlocked && type == DEVICES_UNBLOCK) {
+				continue;
+			} else if(!client.isBlocked && type == DEVICES_BLOCK) {
+				continue;
+			}
 			DeviceInfo info = new DeviceInfo();
 			info.mac = client.deviceAddress;
 			info.ip = mWifiManager.getClientIp(info.mac);

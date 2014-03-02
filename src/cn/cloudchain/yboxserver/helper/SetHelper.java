@@ -135,9 +135,14 @@ public class SetHelper {
 					result = clearBlackList(mac);
 				}
 				break;
-			case wifi_devices:
-				result = getDevices();
+			case wifi_devices: {
+				int type = WifiApManager.DEVICES_ALL;
+				if (params != null) {
+					type = params.optInt("type", WifiApManager.DEVICES_ALL);
+				}
+				result = getDevices(type);
 				break;
+			}
 			case wifi_info:
 				result = getWifiInfo();
 				break;
@@ -155,6 +160,17 @@ public class SetHelper {
 				break;
 			case wifi_restart:
 				result = restartWifiAp();
+				break;
+			case auto_sleep_info:
+				result = getAutoSleepType();
+				break;
+			case auto_sleep_set:
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					int type = params.optInt("type");
+					result = setAutoSleepType(type);
+				}
 				break;
 			default:
 				break;
@@ -410,8 +426,8 @@ public class SetHelper {
 	 * 
 	 * @return
 	 */
-	private String getDevices() {
-		List<DeviceInfo> infos = wifiApManager.getDeviceList();
+	private String getDevices(int type) {
+		List<DeviceInfo> infos = wifiApManager.getDeviceList(type);
 		if (infos == null)
 			return getDefaultJson(false);
 
@@ -516,7 +532,7 @@ public class SetHelper {
 		StringBuffer dns2 = new StringBuffer();
 		boolean result = bspSystem.getEthernetInfo(ip, gw, mask, dns1, dns2);
 
-		StringWriter sw = new StringWriter(50);
+		StringWriter sw = new StringWriter(80);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("result").value(result);
@@ -584,7 +600,7 @@ public class SetHelper {
 		StringBuffer dns2 = new StringBuffer();
 		boolean result = bspSystem.getSIMInfo(ip, gw, mask, dns1, dns2);
 		Log.i(TAG, "get mobile net info result = " + result);
-		StringWriter sw = new StringWriter(50);
+		StringWriter sw = new StringWriter(80);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("result").value(result);
@@ -621,6 +637,46 @@ public class SetHelper {
 	}
 
 	/**
+	 * 设置当前自动休眠类型，设置成功发送状态改变
+	 * 
+	 * @param type
+	 * @return
+	 */
+	private String setAutoSleepType(int type) {
+		boolean result = PreferenceHelper.putInt(PreferenceHelper.AUTO_SLEEP,
+				type);
+		return getDefaultJson(result);
+	}
+
+	/**
+	 * 获取当前自动休眠类型
+	 * 
+	 * @return
+	 */
+	private String getAutoSleepType() {
+		int type = PreferenceHelper.getInt(PreferenceHelper.AUTO_SLEEP,
+				PreferenceHelper.AUTO_SLEEP_OFF);
+		StringWriter sw = new StringWriter(20);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(true);
+			jWriter.name("type").value(type);
+			jWriter.endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
+	}
+
+	/**
 	 * 重启热点
 	 * 
 	 * @return
@@ -649,7 +705,7 @@ public class SetHelper {
 	 * @return {"result":true, "time":5}
 	 */
 	private String getWifiAutoDisable() {
-		StringWriter sw = new StringWriter(50);
+		StringWriter sw = new StringWriter(30);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("result").value(true);
@@ -710,7 +766,7 @@ public class SetHelper {
 	 * @return {"result":success}
 	 */
 	private String getDefaultJson(boolean success) {
-		StringWriter sw = new StringWriter(50);
+		StringWriter sw = new StringWriter(30);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("result").value(success).endObject();
