@@ -1,7 +1,5 @@
 package cn.cloudchain.yboxserver;
 
-import com.ybox.hal.BSPSystem;
-
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +14,8 @@ import cn.cloudchain.yboxserver.receiver.BatteryInfoBroadcastReceiver;
 import cn.cloudchain.yboxserver.receiver.PhoneStateMonitor;
 import cn.cloudchain.yboxserver.server.TcpServer;
 import cn.cloudchain.yboxserver.server.UdpServer;
+
+import com.ybox.hal.BSPSystem;
 
 public class MyApplication extends Application {
 	final String TAG = MyApplication.class.getSimpleName();
@@ -33,7 +33,7 @@ public class MyApplication extends Application {
 		instance = this;
 		Log.i(TAG, "onCreate");
 
-		isEthernet = new BSPSystem(this).getConnected();
+		isEthernet = new BSPSystem(this).getConnected(9);
 		isSIMReady = new PhoneManager(this).isSIMReady();
 
 		new Thread(new Runnable() {
