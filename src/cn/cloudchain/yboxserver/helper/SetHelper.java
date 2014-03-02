@@ -19,6 +19,7 @@ import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.bean.DeviceInfo;
 import cn.cloudchain.yboxserver.bean.ErrorBean;
 import cn.cloudchain.yboxserver.bean.OperType;
+import cn.cloudchain.yboxserver.task.DownloadTask;
 
 import com.ybox.hal.BSPSystem;
 
@@ -172,6 +173,61 @@ public class SetHelper {
 					result = setAutoSleepType(type);
 				}
 				break;
+			case update_middle: {
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					String filePath = params.optString("path");
+					if (TextUtils.isEmpty(filePath)) {
+						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+					} else {
+						result = updateMiddleApk(filePath);
+					}
+				}
+				break;
+			}
+			case update_root_image: {
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					int mode = params.optInt("mode", 1);
+					String filePath = params.optString("path");
+					if (TextUtils.isEmpty(filePath)) {
+						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+					} else {
+						result = updateRootImage(mode, filePath);
+					}
+				}
+				break;
+			}
+			case download_middle_apk: {
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					String url = params.optString("url");
+					String filePath = params.optString("path");
+					if (TextUtils.isEmpty(url) || TextUtils.isEmpty(filePath)) {
+						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+					} else {
+						result = downloadMiddleApk(url, filePath);
+					}
+				}
+				break;
+			}
+			case download_root_image: {
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					String url = params.optString("url");
+					String filePath = params.optString("path");
+					if (TextUtils.isEmpty(url) || TextUtils.isEmpty(filePath)) {
+						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+					} else {
+						result = downloadRootImage(url, filePath);
+					}
+				}
+				break;
+			}
 			default:
 				break;
 
@@ -181,6 +237,77 @@ public class SetHelper {
 			result = getErrorJson(ErrorBean.REQUEST_FORMAT_WRONG);
 		}
 		return result;
+	}
+
+	/**
+	 * 升级ROOT IMAGE
+	 * 
+	 * @param mode
+	 *            为0时重启后升级，为1时立即升级
+	 * @param filePath
+	 * @return
+	 */
+	private String updateRootImage(int mode, String filePath) {
+		if (mode == 0) {
+			boolean result = PreferenceHelper.putInt(
+					PreferenceHelper.ROOT_IMAGE_UPDATE,
+					PreferenceHelper.ROOT_IMAGE_UPDATE_RESTART);
+			if (result) {
+				PreferenceHelper.putString(
+						PreferenceHelper.ROOT_IMAGE_UPDATE_PATH, filePath);
+			}
+			return getDefaultJson(result);
+		}
+
+		int update = bspSystem.setUpgradeImg(1, filePath);
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(true).name("update")
+					.value(update).endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
+	}
+
+	private String updateMiddleApk(String filePath) {
+		int update = bspSystem.install_apk_slient(filePath);
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(true).name("update")
+					.value(update).endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
+	}
+
+	private String downloadRootImage(String url, String filePath) {
+		new DownloadTask().execute(url, filePath);
+		return getDefaultJson(true);
+	}
+
+	private String downloadMiddleApk(String url, String filePath) {
+		new DownloadTask().execute(url, filePath);
+		return getDefaultJson(true);
 	}
 
 	/**

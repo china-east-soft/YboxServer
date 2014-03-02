@@ -6,7 +6,9 @@ public enum OperType {
 			107), signal_quality(108), traffic(109), storage(110), ethernet_info(
 			111), ethernet_dhcp_set(112), ethernet_static_set(113), wifi_restart(
 			114), wifi_auto_disable_info(115), wifi_auto_disable_set(116), mobile_traffic_info(
-			117), sleep(118), mobile_net_info(119), auto_sleep_set(120), auto_sleep_info(121);
+			117), sleep(118), mobile_net_info(119), auto_sleep_set(120), auto_sleep_info(
+			121), update_root_image(122), update_middle(123), download_root_image(
+			124), download_middle_apk(125);
 
 	private int value;
 
@@ -86,6 +88,18 @@ public enum OperType {
 			break;
 		case 121:
 			result = OperType.auto_sleep_info;
+			break;
+		case 122:
+			result = OperType.update_root_image;
+			break;
+		case 123:
+			result = OperType.update_middle;
+			break;
+		case 124:
+			result = OperType.download_root_image;
+			break;
+		case 125:
+			result = OperType.download_middle_apk;
 			break;
 		}
 		return result;

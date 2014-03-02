@@ -7,8 +7,10 @@ import android.content.IntentFilter;
 import android.net.wifi.WifiConfiguration;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 import cn.cloudchain.yboxserver.helper.PhoneManager;
+import cn.cloudchain.yboxserver.helper.PreferenceHelper;
 import cn.cloudchain.yboxserver.helper.WifiApManager;
 import cn.cloudchain.yboxserver.receiver.BatteryInfoBroadcastReceiver;
 import cn.cloudchain.yboxserver.receiver.PhoneStateMonitor;
@@ -32,8 +34,20 @@ public class MyApplication extends Application {
 		super.onCreate();
 		instance = this;
 		Log.i(TAG, "onCreate");
+		BSPSystem bspSystem = new BSPSystem(this);
 
-		isEthernet = new BSPSystem(this).getConnected(9);
+		// 如果需要升级
+		if (PreferenceHelper.getInt(PreferenceHelper.ROOT_IMAGE_UPDATE, 0) == PreferenceHelper.ROOT_IMAGE_UPDATE_RESTART) {
+			String filePath = PreferenceHelper.getString(
+					PreferenceHelper.ROOT_IMAGE_UPDATE_PATH, "");
+			if (!TextUtils.isEmpty(filePath)) {
+				bspSystem.setUpgradeImg(1, filePath);
+			}
+			PreferenceHelper.remove(PreferenceHelper.ROOT_IMAGE_UPDATE);
+			PreferenceHelper.remove(PreferenceHelper.ROOT_IMAGE_UPDATE_PATH);
+		}
+
+		isEthernet = bspSystem.getConnected(9);
 		isSIMReady = new PhoneManager(this).isSIMReady();
 
 		new Thread(new Runnable() {
@@ -49,10 +63,6 @@ public class MyApplication extends Application {
 
 		Intent udp = new Intent(this, UdpServer.class);
 		startService(udp);
-
-		// IntentFilter timeTickFilter = new
-		// IntentFilter(Intent.ACTION_TIME_TICK);
-		// registerReceiver(new TimeTickBroadcastReceiver(), timeTickFilter);
 
 		IntentFilter batteryFilter = new IntentFilter();
 		batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
