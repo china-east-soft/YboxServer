@@ -583,7 +583,7 @@ public class SetHelper {
 		StringBuffer dns1 = new StringBuffer();
 		StringBuffer dns2 = new StringBuffer();
 		boolean result = bspSystem.getSIMInfo(ip, gw, mask, dns1, dns2);
-
+		Log.i(TAG, "get mobile net info result = " + result);
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
