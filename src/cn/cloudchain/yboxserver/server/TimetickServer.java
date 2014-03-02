@@ -7,7 +7,8 @@ import java.util.TimerTask;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import cn.cloudchain.yboxserver.bean.DeviceInfo;
+import cn.cloudchain.yboxcommon.bean.DeviceInfo;
+import cn.cloudchain.yboxcommon.bean.Types;
 import cn.cloudchain.yboxserver.helper.PreferenceHelper;
 import cn.cloudchain.yboxserver.helper.WifiApManager;
 
@@ -33,17 +34,16 @@ public class TimetickServer extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		List<DeviceInfo> devices = (new WifiApManager(this))
-				.getDeviceList(WifiApManager.DEVICES_UNBLOCK);
+				.getDeviceList(Types.DEVICES_UNBLOCK);
 		delay = 0;
 		if (devices == null || devices.size() == 0) {
 			int autoSleepType = PreferenceHelper.getInt(
-					PreferenceHelper.AUTO_SLEEP,
-					PreferenceHelper.AUTO_SLEEP_OFF);
+					PreferenceHelper.AUTO_SLEEP, Types.AUTO_SLEEP_OFF);
 			switch (autoSleepType) {
-			case PreferenceHelper.AUTO_SLEEP_FOR_10:
+			case Types.AUTO_SLEEP_FOR_10:
 				delay = 10 * 60 * 1000;
 				break;
-			case PreferenceHelper.AUTO_SLEEP_FOR_30:
+			case Types.AUTO_SLEEP_FOR_30:
 				delay = 30 * 60 * 1000;
 				break;
 			}

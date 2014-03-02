@@ -7,9 +7,6 @@ import cn.cloudchain.yboxserver.MyApplication;
 
 public class PreferenceHelper {
 	public static final String AUTO_SLEEP = "auto_sleep";
-	public static final int AUTO_SLEEP_OFF = 0;
-	public static final int AUTO_SLEEP_FOR_10 = 1;
-	public static final int AUTO_SLEEP_FOR_30 = 2;
 
 	public static final String ROOT_IMAGE_UPDATE = "root_image_update";
 	public static final String ROOT_IMAGE_UPDATE_PATH = "root_image_update_path";

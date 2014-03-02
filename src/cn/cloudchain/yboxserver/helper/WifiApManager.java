@@ -7,10 +7,10 @@ import java.util.List;
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-import android.util.Log;
-import cn.cloudchain.yboxserver.MyApplication;
-import cn.cloudchain.yboxserver.bean.DeviceInfo;
 import android.provider.Settings.System;
+import android.util.Log;
+import cn.cloudchain.yboxcommon.bean.DeviceInfo;
+import cn.cloudchain.yboxcommon.bean.Types;
 import android.net.wifi.HotspotClient;
 
 /**
@@ -159,10 +159,6 @@ public class WifiApManager {
 		}
 		return result;
 	}
-	
-	public static final int DEVICES_BLOCK = 0;
-	public static final int DEVICES_UNBLOCK = 1;
-	public static final int DEVICES_ALL = 2;
 
 	/**
 	 * 返回所有连接的设备信息
@@ -178,9 +174,9 @@ public class WifiApManager {
 		List<DeviceInfo> deviceList = new ArrayList<DeviceInfo>(
 				mClientList.size());
 		for (HotspotClient client : mClientList) {
-			if(client.isBlocked && type == DEVICES_UNBLOCK) {
+			if(client.isBlocked && type == Types.DEVICES_UNBLOCK) {
 				continue;
-			} else if(!client.isBlocked && type == DEVICES_BLOCK) {
+			} else if(!client.isBlocked && type == Types.DEVICES_BLOCK) {
 				continue;
 			}
 			DeviceInfo info = new DeviceInfo();
@@ -236,10 +232,4 @@ public class WifiApManager {
 				System.WIFI_HOTSPOT_AUTO_DISABLE,
 				System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS);
 	}
-
-	// public static final String WIFI_HOTSPOT_AUTO_DISABLE =
-	// "wifi_hotspot_auto_disable";
-	// public static final int WIFI_HOTSPOT_AUTO_DISABLE_OFF = 0;
-	// public static final int WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS = 1;
-	// public static final int WIFI_HOTSPOT_AUTO_DISABLE_FOR_TEN_MINS = 2;
 }

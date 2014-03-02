@@ -19,6 +19,7 @@ import android.net.wifi.WifiManager.MulticastLock;
 import android.os.IBinder;
 import android.util.JsonWriter;
 import android.util.Log;
+import cn.cloudchain.yboxcommon.bean.Types;
 import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.helper.Helper;
 import cn.cloudchain.yboxserver.helper.PhoneManager;
@@ -125,13 +126,13 @@ public class UdpServer extends Service {
 		try {
 			jWriter.beginObject().name("conn");
 			if (MyApplication.getInstance().isEthernet) {
-				jWriter.value(1);
+				jWriter.value(Types.CONN_TYPE_ETHERNET);
 			} else if (!MyApplication.getInstance().isSIMReady) {
-				jWriter.value(0);
+				jWriter.value(Types.CONN_TYPE_NONE);
 			} else if (phoneManager.isMobileDataEnabled()) {
-				jWriter.value(2);
+				jWriter.value(Types.CONN_TYPE_MOBILE_DATA_ON);
 			} else {
-				jWriter.value(3);
+				jWriter.value(Types.CONN_TYPE_MOBILE_DATA_OFF);
 			}
 			if (MyApplication.getInstance().isBatteryLow) {
 				jWriter.name("battery_low").value(true);

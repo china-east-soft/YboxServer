@@ -15,10 +15,11 @@ import android.text.TextUtils;
 import android.util.JsonWriter;
 import android.util.Log;
 import android.util.SparseArray;
+import cn.cloudchain.yboxcommon.bean.DeviceInfo;
+import cn.cloudchain.yboxcommon.bean.ErrorBean;
+import cn.cloudchain.yboxcommon.bean.OperType;
+import cn.cloudchain.yboxcommon.bean.Types;
 import cn.cloudchain.yboxserver.MyApplication;
-import cn.cloudchain.yboxserver.bean.DeviceInfo;
-import cn.cloudchain.yboxserver.bean.ErrorBean;
-import cn.cloudchain.yboxserver.bean.OperType;
 import cn.cloudchain.yboxserver.task.DownloadTask;
 
 import com.ybox.hal.BSPSystem;
@@ -137,9 +138,9 @@ public class SetHelper {
 				}
 				break;
 			case wifi_devices: {
-				int type = WifiApManager.DEVICES_ALL;
+				int type = Types.DEVICES_ALL;
 				if (params != null) {
-					type = params.optInt("type", WifiApManager.DEVICES_ALL);
+					type = params.optInt("type", Types.DEVICES_ALL);
 				}
 				result = getDevices(type);
 				break;
@@ -190,7 +191,7 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					int mode = params.optInt("mode", 1);
+					int mode = params.optInt("mode", Types.MODE_UPDATE_NOW);
 					String filePath = params.optString("path");
 					if (TextUtils.isEmpty(filePath)) {
 						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
@@ -248,7 +249,7 @@ public class SetHelper {
 	 * @return
 	 */
 	private String updateRootImage(int mode, String filePath) {
-		if (mode == 0) {
+		if (mode == Types.MODE_UPDATE_AFTER_RESTART) {
 			boolean result = PreferenceHelper.putInt(
 					PreferenceHelper.ROOT_IMAGE_UPDATE,
 					PreferenceHelper.ROOT_IMAGE_UPDATE_RESTART);
@@ -463,17 +464,17 @@ public class SetHelper {
 		WifiConfiguration wifiConfig = wifiApManager.getWifiApConfiguration();
 		wifiConfig.SSID = ssid;
 		switch (keymgmt) {
-		case 0:
+		case Types.KEYMGMT_NONE:
 			wifiConfig.allowedKeyManagement.set(KeyMgmt.NONE);
 			break;
-		case 1:
+		case Types.KEYMGMT_WPA_PSK:
 			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA_PSK);
 			wifiConfig.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
 			if (!TextUtils.isEmpty(pass)) {
 				wifiConfig.preSharedKey = pass;
 			}
 			break;
-		case 2:
+		case Types.KEYMGMT_WPA2_PSK:
 			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA2_PSK);
 			wifiConfig.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
 			if (!TextUtils.isEmpty(pass)) {
@@ -541,11 +542,11 @@ public class SetHelper {
 	 */
 	private int getSecurityTypeIndex(WifiConfiguration wifiConfig) {
 		if (wifiConfig.allowedKeyManagement.get(KeyMgmt.WPA_PSK)) {
-			return 1;
+			return Types.KEYMGMT_WPA_PSK;
 		} else if (wifiConfig.allowedKeyManagement.get(KeyMgmt.WPA2_PSK)) {
-			return 2;
+			return Types.KEYMGMT_WPA2_PSK;
 		}
-		return 0;
+		return Types.KEYMGMT_NONE;
 	}
 
 	/**
@@ -782,7 +783,7 @@ public class SetHelper {
 	 */
 	private String getAutoSleepType() {
 		int type = PreferenceHelper.getInt(PreferenceHelper.AUTO_SLEEP,
-				PreferenceHelper.AUTO_SLEEP_OFF);
+				Types.AUTO_SLEEP_OFF);
 		StringWriter sw = new StringWriter(20);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
