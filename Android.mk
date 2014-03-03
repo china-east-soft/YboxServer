@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_STATIC_JAVA_LIBRARIES := YboxBSP
+LOCAL_STATIC_JAVA_LIBRARIES := YboxBSP YboxCommon
 
 LOCAL_MODULE_TAGS := optional
 
@@ -14,7 +14,7 @@ LOCAL_CERTIFICATE := platform
 
 include $(BUILD_PACKAGE)
 
-LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := YboxBSP:libs/BSPSystem.jar
+LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := YboxBSP:libs/BSPSystem.jar YboxCommon:libs/yboxcommon.jar
 
 include $(BUILD_MULTI_PREBUILT)
 
