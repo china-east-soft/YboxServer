@@ -11,6 +11,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.ybox.hal.BSPSystem;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -30,14 +32,16 @@ public class UdpServer extends Service {
 	private ScheduledExecutorService executor;
 	private DatagramSocket socket;
 	private final int PORT = 12345;
-	private final String defaultHost = "192.168.43.255";
+	private final String defaultHost = "10.10.10.255";
 	// private boolean lastEthernet = MyApplication.getInstance().isEthernet;
+	private BSPSystem bspSystem;
 
 	private MulticastLock multiLock;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		bspSystem = new BSPSystem(this);
 		phoneManager = new PhoneManager(this);
 		executor = Executors.newScheduledThreadPool(1);
 
@@ -125,7 +129,7 @@ public class UdpServer extends Service {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name("conn");
-			if (MyApplication.getInstance().isEthernet) {
+			if (bspSystem.getConnected(9)) {
 				jWriter.value(Types.CONN_TYPE_ETHERNET);
 			} else if (!MyApplication.getInstance().isSIMReady) {
 				jWriter.value(Types.CONN_TYPE_NONE);
