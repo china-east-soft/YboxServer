@@ -10,6 +10,8 @@ import java.util.Enumeration;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.os.StatFs;
 import android.util.Log;
@@ -26,6 +28,19 @@ public class Helper {
 
 	private Helper() {
 
+	}
+
+	/**
+	 * 获取设备MAC地址
+	 * 
+	 * @param context
+	 * @return
+	 */
+	public String getDevicesMac(Context context) {
+		WifiManager wifi = (WifiManager) context
+				.getSystemService(Context.WIFI_SERVICE);
+		WifiInfo info = wifi.getConnectionInfo();
+		return info.getMacAddress();
 	}
 
 	public String getVersionName(Context context) {
@@ -67,7 +82,7 @@ public class Helper {
 						if (broadcastAddress != null) {
 							Log.i("UdpServer", "broadcast address = "
 									+ broadcastAddress.getHostAddress());
-//							break;
+							// break;
 						}
 					}
 				}

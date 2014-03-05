@@ -229,6 +229,10 @@ public class SetHelper {
 				}
 				break;
 			}
+			case device_info: {
+				result = getDeviceInfo();
+				break;
+			}
 			default:
 				break;
 
@@ -238,6 +242,33 @@ public class SetHelper {
 			result = getErrorJson(ErrorBean.REQUEST_FORMAT_WRONG);
 		}
 		return result;
+	}
+
+	/**
+	 * 获取设备信息，如设备名，MAC地址
+	 * 
+	 * @return
+	 */
+	private String getDeviceInfo() {
+		String mac = Helper.getInstance().getDevicesMac(
+				MyApplication.getAppContext());
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject().name("result").value(true).name("mac")
+					.value(mac).endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
 	}
 
 	/**
