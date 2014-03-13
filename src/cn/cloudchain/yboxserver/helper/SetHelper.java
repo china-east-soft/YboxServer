@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.AuthAlgorithm;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
@@ -23,6 +24,9 @@ import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.task.DownloadTask;
 
 import com.ybox.hal.BSPSystem;
+import com.yyxu.download.utils.MyIntents;
+import com.yyxu.download.utils.NetworkUtils;
+import com.yyxu.download.utils.StorageUtils;
 
 public class SetHelper {
 	final String TAG = SetHelper.class.getSimpleName();
@@ -174,57 +178,32 @@ public class SetHelper {
 					result = setAutoSleepType(type);
 				}
 				break;
-			case update_middle: {
+			case ybox_update: {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					String filePath = params.optString("path");
-					if (TextUtils.isEmpty(filePath)) {
+					String imageUrl = params.optString("image_url");
+					String middleUrl = params.optString("middle_url");
+					if (TextUtils.isEmpty(imageUrl)
+							&& TextUtils.isEmpty(middleUrl)) {
 						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 					} else {
-						result = updateMiddleApk(filePath);
+						result = yboxUpdate(imageUrl, middleUrl);
 					}
 				}
 				break;
 			}
-			case update_root_image: {
+			case ybox_update_download: {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					int mode = params.optInt("mode", Types.MODE_UPDATE_NOW);
-					String filePath = params.optString("path");
-					if (TextUtils.isEmpty(filePath)) {
+					String imageUrl = params.optString("image_url");
+					String middleUrl = params.optString("middle_url");
+					if (TextUtils.isEmpty(imageUrl)
+							&& TextUtils.isEmpty(middleUrl)) {
 						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 					} else {
-						result = updateRootImage(mode, filePath);
-					}
-				}
-				break;
-			}
-			case download_middle_apk: {
-				if (params == null) {
-					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
-				} else {
-					String url = params.optString("url");
-					String filePath = params.optString("path");
-					if (TextUtils.isEmpty(url) || TextUtils.isEmpty(filePath)) {
-						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
-					} else {
-						result = downloadMiddleApk(url, filePath);
-					}
-				}
-				break;
-			}
-			case download_root_image: {
-				if (params == null) {
-					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
-				} else {
-					String url = params.optString("url");
-					String filePath = params.optString("path");
-					if (TextUtils.isEmpty(url) || TextUtils.isEmpty(filePath)) {
-						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
-					} else {
-						result = downloadRootImage(url, filePath);
+						result = yboxUpdateDownload(imageUrl, middleUrl);
 					}
 				}
 				break;
@@ -272,31 +251,30 @@ public class SetHelper {
 	}
 
 	/**
-	 * 升级ROOT IMAGE
+	 * 安装升级包
 	 * 
-	 * @param mode
-	 *            为0时重启后升级，为1时立即升级
-	 * @param filePath
+	 * @param imageUrl
+	 * @param middleUrl
 	 * @return
 	 */
-	private String updateRootImage(int mode, String filePath) {
-		if (mode == Types.MODE_UPDATE_AFTER_RESTART) {
-			boolean result = PreferenceHelper.putInt(
-					PreferenceHelper.ROOT_IMAGE_UPDATE,
-					PreferenceHelper.ROOT_IMAGE_UPDATE_RESTART);
-			if (result) {
-				PreferenceHelper.putString(
-						PreferenceHelper.ROOT_IMAGE_UPDATE_PATH, filePath);
-			}
-			return getDefaultJson(result);
-		}
-
-		int update = bspSystem.setUpgradeImg(1, filePath);
+	private String yboxUpdate(String imageUrl, String middleUrl) {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true).name("update")
-					.value(update).endObject();
+			jWriter.beginObject().name("result").value(true);
+			if (!TextUtils.isEmpty(middleUrl)) {
+				String filePath = StorageUtils.FILE_ROOT
+						+ NetworkUtils.getFileNameFromUrl(middleUrl);
+				int result = bspSystem.install_apk_slient(filePath);
+				jWriter.name("middle").value(result);
+			}
+			if (!TextUtils.isEmpty(imageUrl)) {
+				String filePath = StorageUtils.FILE_ROOT
+						+ NetworkUtils.getFileNameFromUrl(imageUrl);
+				int result = bspSystem.setUpgradeImg(1, filePath);
+				jWriter.name("image").value(result);
+			}
+			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -311,34 +289,29 @@ public class SetHelper {
 		return sw.toString();
 	}
 
-	private String updateMiddleApk(String filePath) {
-		int update = bspSystem.install_apk_slient(filePath);
-		StringWriter sw = new StringWriter(50);
-		JsonWriter jWriter = new JsonWriter(sw);
-		try {
-			jWriter.beginObject().name("result").value(true).name("update")
-					.value(update).endObject();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (jWriter != null) {
-				try {
-					jWriter.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+	/**
+	 * 下载升级包
+	 * 
+	 * @param imageUrl
+	 *            升级链接
+	 * @param middleUrl
+	 * @return
+	 */
+	private String yboxUpdateDownload(String imageUrl, String middleUrl) {
+		if (!TextUtils.isEmpty(imageUrl)) {
+			Intent downloadIntent = new Intent(
+					"com.yyxu.download.services.IDownloadService");
+			downloadIntent.putExtra(MyIntents.TYPE, MyIntents.Types.ADD);
+			downloadIntent.putExtra(MyIntents.URL, imageUrl);
+			MyApplication.getAppContext().startService(downloadIntent);
 		}
-		return sw.toString();
-	}
-
-	private String downloadRootImage(String url, String filePath) {
-		new DownloadTask().execute(url, filePath);
-		return getDefaultJson(true);
-	}
-
-	private String downloadMiddleApk(String url, String filePath) {
-		new DownloadTask().execute(url, filePath);
+		if (!TextUtils.isEmpty(middleUrl)) {
+			Intent downloadIntent = new Intent(
+					"com.yyxu.download.services.IDownloadService");
+			downloadIntent.putExtra(MyIntents.TYPE, MyIntents.Types.ADD);
+			downloadIntent.putExtra(MyIntents.URL, middleUrl);
+			MyApplication.getAppContext().startService(downloadIntent);
+		}
 		return getDefaultJson(true);
 	}
 
