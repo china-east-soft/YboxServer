@@ -53,7 +53,8 @@ public class FileManager {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject();
-			jWriter.name(Constants.RESULT).value(true);
+			jWriter.name(Constants.RESULT).value(true)
+					.name(Constants.File.FILES);
 			File[] files = directory.listFiles();
 			jWriter.beginArray();
 			for (File file : files) {
@@ -95,11 +96,11 @@ public class FileManager {
 	 * @return {"result":true, "total":717272771, "remain":72771727}
 	 */
 	public String getStorageInfo() {
-		double totalSize = getSDcardTotalMemory();
+		long totalSize = getSDcardTotalMemory();
 		if (totalSize < 0) {
 			return Helper.getInstance().getErrorJson(ErrorBean.SD_NOT_READY);
 		}
-		double availableSize = getSDcardAvailableMemory();
+		long availableSize = getSDcardAvailableMemory();
 
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
@@ -128,13 +129,13 @@ public class FileManager {
 	 * @return
 	 */
 	@SuppressWarnings("deprecation")
-	private double getSDcardTotalMemory() {
-		double memory = -1;
+	private long getSDcardTotalMemory() {
+		long memory = -1;
 		if (isSDcardAvailable()) {
 			File sdcardDir = Environment.getExternalStorageDirectory();
 			StatFs statFs = new StatFs(sdcardDir.getPath());
-			int blockCount = statFs.getBlockCount();
-			int blockSize = statFs.getBlockSize();
+			long blockCount = statFs.getBlockCount();
+			long blockSize = statFs.getBlockSize();
 			memory = blockCount * blockSize;
 		}
 		return memory;
@@ -146,13 +147,13 @@ public class FileManager {
 	 * @return
 	 */
 	@SuppressWarnings("deprecation")
-	private double getSDcardAvailableMemory() {
-		double memory = -1;
+	private long getSDcardAvailableMemory() {
+		long memory = -1;
 		if (isSDcardAvailable()) {
 			File sdcardDir = Environment.getExternalStorageDirectory();
 			StatFs statFs = new StatFs(sdcardDir.getPath());
-			int blockSize = statFs.getBlockSize();
-			int availableBlock = statFs.getAvailableBlocks();
+			long blockSize = statFs.getBlockSize();
+			long availableBlock = statFs.getAvailableBlocks();
 			memory = blockSize * availableBlock;
 		}
 		return memory;
