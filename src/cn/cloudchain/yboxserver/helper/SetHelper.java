@@ -16,12 +16,12 @@ import android.text.TextUtils;
 import android.util.JsonWriter;
 import android.util.Log;
 import android.util.SparseArray;
+import cn.cloudchain.yboxcommon.bean.Constants;
 import cn.cloudchain.yboxcommon.bean.DeviceInfo;
 import cn.cloudchain.yboxcommon.bean.ErrorBean;
 import cn.cloudchain.yboxcommon.bean.OperType;
 import cn.cloudchain.yboxcommon.bean.Types;
 import cn.cloudchain.yboxserver.MyApplication;
-import cn.cloudchain.yboxserver.task.DownloadTask;
 
 import com.ybox.hal.BSPSystem;
 import com.yyxu.download.utils.MyIntents;
@@ -61,8 +61,8 @@ public class SetHelper {
 		}
 		try {
 			JSONObject obj = new JSONObject(operation);
-			int oper = obj.optInt("oper");
-			JSONObject params = obj.optJSONObject("params");
+			int oper = obj.optInt(Constants.OPER);
+			JSONObject params = obj.optJSONObject(Constants.PARAMS);
 
 			switch (OperType.getOperType(oper)) {
 			case battery:
@@ -78,11 +78,11 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					String ip = params.optString("ip");
-					String gateway = params.optString("gateway");
-					String mask = params.optString("mask");
-					String dns1 = params.optString("dns1");
-					String dns2 = params.optString("dns2");
+					String ip = params.optString(Constants.Wlan.IP);
+					String gateway = params.optString(Constants.Wlan.GATEWAY);
+					String mask = params.optString(Constants.Wlan.SUBMASK);
+					String dns1 = params.optString(Constants.Wlan.DNS1);
+					String dns2 = params.optString(Constants.Wlan.DNS2);
 					result = setEthStatic(ip, gateway, mask, dns1, dns2);
 				}
 				break;
@@ -90,7 +90,7 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					boolean enable = params.optBoolean("enable");
+					boolean enable = params.optBoolean(Constants.ENABLE);
 					result = setMobileDataEnable(enable);
 				}
 				break;
@@ -110,7 +110,7 @@ public class SetHelper {
 				result = goToSleep();
 				break;
 			case storage:
-				result = getStorageDetail();
+				result = FileManager.getInstance().getStorageInfo();
 				break;
 			case traffic:
 				break;
@@ -121,7 +121,7 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					int time = params.optInt("time");
+					int time = params.optInt(Constants.TYPE);
 					result = setWifiAutoDisable(time);
 				}
 				break;
@@ -129,7 +129,7 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					String mac = params.optString("mac");
+					String mac = params.optString(Constants.DeviceInfo.MAC);
 					result = addToBlackList(mac);
 				}
 				break;
@@ -137,14 +137,14 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					String mac = params.optString("mac");
+					String mac = params.optString(Constants.DeviceInfo.MAC);
 					result = clearBlackList(mac);
 				}
 				break;
 			case wifi_devices: {
 				int type = Types.DEVICES_ALL;
 				if (params != null) {
-					type = params.optInt("type", Types.DEVICES_ALL);
+					type = params.optInt(Constants.TYPE, Types.DEVICES_ALL);
 				}
 				result = getDevices(type);
 				break;
@@ -156,10 +156,11 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					String ssid = params.optString("ssid");
-					String pass = params.optString("pass");
-					int keymgmt = params.optInt("keymgmt", -1);
-					int maxclient = params.optInt("maxclient", -1);
+					String ssid = params.optString(Constants.Wifi.SSID);
+					String pass = params.optString(Constants.Wifi.PASS);
+					int keymgmt = params.optInt(Constants.Wifi.KEYMGMT, -1);
+					int maxclient = params
+							.optInt(Constants.Wifi.MAX_CLIENT, -1);
 					result = setWifiInfo(ssid, pass, keymgmt, maxclient);
 				}
 			}
@@ -174,7 +175,7 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					int type = params.optInt("type");
+					int type = params.optInt(Constants.TYPE);
 					result = setAutoSleepType(type);
 				}
 				break;
@@ -182,8 +183,10 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					String imageUrl = params.optString("image_url");
-					String middleUrl = params.optString("middle_url");
+					String imageUrl = params
+							.optString(Constants.Update.IMAGE_URL);
+					String middleUrl = params
+							.optString(Constants.Update.MIDDLE_URL);
 					if (TextUtils.isEmpty(imageUrl)
 							&& TextUtils.isEmpty(middleUrl)) {
 						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
@@ -197,8 +200,10 @@ public class SetHelper {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
-					String imageUrl = params.optString("image_url");
-					String middleUrl = params.optString("middle_url");
+					String imageUrl = params
+							.optString(Constants.Update.IMAGE_URL);
+					String middleUrl = params
+							.optString(Constants.Update.IMAGE_URL);
 					if (TextUtils.isEmpty(imageUrl)
 							&& TextUtils.isEmpty(middleUrl)) {
 						result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
@@ -212,6 +217,15 @@ public class SetHelper {
 				result = getDeviceInfo();
 				break;
 			}
+			case files_detail:
+				result = FileManager.getInstance().getFilesInDirectory(
+						params == null ? "" : params
+								.optString(Constants.File.PATH_ABSOLUTE));
+				break;
+			case files_delete:
+				break;
+			case files_download:
+				break;
 			default:
 				break;
 
@@ -224,7 +238,7 @@ public class SetHelper {
 	}
 
 	/**
-	 * 获取设备信息，如设备名，MAC地址
+	 * 获取设备信息，如设备名，MAC地址，版本信息
 	 * 
 	 * @return
 	 */
@@ -234,8 +248,8 @@ public class SetHelper {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true).name("mac")
-					.value(mac).endObject();
+			jWriter.beginObject().name(Constants.RESULT).value(true)
+					.name(Constants.DeviceInfo.MAC).value(mac).endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -261,18 +275,18 @@ public class SetHelper {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true);
+			jWriter.beginObject().name(Constants.RESULT).value(true);
 			if (!TextUtils.isEmpty(imageUrl)) {
 				String filePath = StorageUtils.FILE_ROOT
 						+ NetworkUtils.getFileNameFromUrl(imageUrl);
 				int result = bspSystem.setUpgradeImg(1, filePath);
-				jWriter.name("image").value(result);
+				jWriter.name(Constants.Update.IMAGE_RESULT).value(result);
 			}
 			if (!TextUtils.isEmpty(middleUrl)) {
 				String filePath = StorageUtils.FILE_ROOT
 						+ NetworkUtils.getFileNameFromUrl(middleUrl);
 				int result = bspSystem.install_apk_slient(filePath);
-				jWriter.name("middle").value(result);
+				jWriter.name(Constants.Update.MIDDLE_URL).value(result);
 			}
 			jWriter.endObject();
 		} catch (IOException e) {
@@ -329,14 +343,15 @@ public class SetHelper {
 	/**
 	 * 获取电量值
 	 * 
-	 * @return {"result":true, "remain":59}
+	 * @return {Constants.RESULT:true, "remain":59}
 	 */
 	private String getBattery() {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true).name("remain")
-					.value(phoneManager.getBattery()).endObject();
+			jWriter.beginObject().name(Constants.RESULT).value(true)
+					.name(Constants.REMAIN).value(phoneManager.getBattery())
+					.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -354,13 +369,14 @@ public class SetHelper {
 	/**
 	 * 获取3G信号质量
 	 * 
-	 * @return {"result":true, "strength":-102}
+	 * @return {Constants.RESULT:true, "strength":-102}
 	 */
 	private String getSignalQuality() {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true).name("strength")
+			jWriter.beginObject().name(Constants.RESULT).value(true)
+					.name(Constants.DeviceInfo.STRENGTH)
 					.value(MyApplication.getInstance().signalStrength)
 					.endObject();
 		} catch (IOException e) {
@@ -391,53 +407,46 @@ public class SetHelper {
 	/**
 	 * 获取手机流量信息
 	 * 
-	 * @return {"result":true, "data": [{"slot": 12, "limit": 2122, "warn":123,
+	 * @return {Constants.RESULT:true, "limit": 2122, "warn":123,
 	 *         "today":{"rx":1, "tx":1},
-	 *         "month":{"rx":1,"tx":1},"total":{"rx":1;"tx":1}]}
+	 *         "month":{"rx":1,"tx":1},"total":{"rx":1;"tx":1}}
 	 */
 	private String getMobileTrafficInfo() {
 		List<SparseArray<Long>> list = dataUsageHelper.getMobileData();
-		if (list == null)
+		if (list == null || list.size() == 0)
 			return getErrorJson(ErrorBean.SIM_NOT_READY);
 
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true).name("data");
-			jWriter.beginArray();
-			for (SparseArray<Long> item : list) {
-				int slot = item.get(DataUsageHelper.KEY_SIM_SLOT).intValue();
-				jWriter.beginObject();
-				jWriter.name("slot").value(slot);
-				jWriter.name("limit")
-						.value(item.get(DataUsageHelper.KEY_LIMIT));
-				jWriter.name("warn").value(
-						item.get(DataUsageHelper.KEY_WARNING));
+			jWriter.beginObject().name(Constants.RESULT).value(true);
+			SparseArray<Long> item = list.get(0);
+			jWriter.name(Constants.Traffic.LIMIT).value(
+					item.get(DataUsageHelper.KEY_LIMIT));
+			jWriter.name(Constants.Traffic.WARN).value(
+					item.get(DataUsageHelper.KEY_WARNING));
 
-				jWriter.name("today").beginObject();
-				jWriter.name("rx")
-						.value(item.get(DataUsageHelper.KEY_RX_TODAY));
-				jWriter.name("tx")
-						.value(item.get(DataUsageHelper.KEY_TX_TODAY));
-				jWriter.endObject();
+			jWriter.name(Constants.Traffic.TODAY).beginObject();
+			jWriter.name(Constants.Traffic.RX).value(
+					item.get(DataUsageHelper.KEY_RX_TODAY));
+			jWriter.name(Constants.Traffic.TX).value(
+					item.get(DataUsageHelper.KEY_TX_TODAY));
+			jWriter.endObject();
 
-				jWriter.name("month").beginObject();
-				jWriter.name("rx")
-						.value(item.get(DataUsageHelper.KEY_RX_MONTH));
-				jWriter.name("tx")
-						.value(item.get(DataUsageHelper.KEY_TX_MONTH));
-				jWriter.endObject();
+			jWriter.name(Constants.Traffic.MONTH).beginObject();
+			jWriter.name(Constants.Traffic.RX).value(
+					item.get(DataUsageHelper.KEY_RX_MONTH));
+			jWriter.name(Constants.Traffic.TX).value(
+					item.get(DataUsageHelper.KEY_TX_MONTH));
+			jWriter.endObject();
 
-				jWriter.name("total").beginObject();
-				jWriter.name("rx")
-						.value(item.get(DataUsageHelper.KEY_RX_TOTAL));
-				jWriter.name("tx")
-						.value(item.get(DataUsageHelper.KEY_TX_TOTAL));
-				jWriter.endObject();
+			jWriter.name(Constants.Traffic.TOTAL).beginObject();
+			jWriter.name(Constants.Traffic.RX).value(
+					item.get(DataUsageHelper.KEY_RX_TOTAL));
+			jWriter.name(Constants.Traffic.TX).value(
+					item.get(DataUsageHelper.KEY_TX_TOTAL));
+			jWriter.endObject();
 
-				jWriter.endObject();
-			}
-			jWriter.endArray();
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -513,16 +522,18 @@ public class SetHelper {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true).name("ssid")
-					.value(config.SSID);
+			jWriter.beginObject().name(Constants.RESULT).value(true)
+					.name(Constants.Wifi.SSID).value(config.SSID);
 
 			if (!config.allowedKeyManagement.get(KeyMgmt.NONE)) {
-				jWriter.name("pass").value(config.preSharedKey);
+				jWriter.name(Constants.Wifi.PASS).value(config.preSharedKey);
 			}
-			jWriter.name("keymgmt").value(getSecurityTypeIndex(config));
-			jWriter.name("autodisable").value(
+			jWriter.name(Constants.Wifi.KEYMGMT).value(
+					getSecurityTypeIndex(config));
+			jWriter.name(Constants.Wifi.AUTO_DISABLE).value(
 					wifiApManager.getWifiAutoDisable());
-			jWriter.name("maxclient").value(wifiApManager.getMaxClientNum());
+			jWriter.name(Constants.Wifi.MAX_CLIENT).value(
+					wifiApManager.getMaxClientNum());
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -566,15 +577,16 @@ public class SetHelper {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true).name("devices");
+			jWriter.beginObject().name(Constants.RESULT).value(true)
+					.name(Constants.Hotspot.DEVICES);
 			jWriter.beginArray();
 
 			for (DeviceInfo info : infos) {
 				jWriter.beginObject();
-				jWriter.name("name").value(info.name);
-				jWriter.name("mac").value(info.mac);
-				jWriter.name("ip").value(info.ip);
-				jWriter.name("block").value(info.blocked);
+				jWriter.name(Constants.Hotspot.NAME).value(info.name);
+				jWriter.name(Constants.Hotspot.MAC).value(info.mac);
+				jWriter.name(Constants.Hotspot.IP).value(info.ip);
+				jWriter.name(Constants.Hotspot.BLOCK).value(info.blocked);
 				jWriter.endObject();
 			}
 
@@ -617,41 +629,6 @@ public class SetHelper {
 	}
 
 	/**
-	 * 获取SD卡存储信息
-	 * 
-	 * @return {"result":true, "total":"20G","remain":"512MB"}
-	 */
-	private String getStorageDetail() {
-		double totalSize = Helper.getInstance().getSDcardTotalMemory();
-		if (totalSize < 0) {
-			return getErrorJson(ErrorBean.SD_NOT_READY);
-		}
-		double availableSize = Helper.getInstance().getSDcardAvailableMemory();
-
-		StringWriter sw = new StringWriter(50);
-		JsonWriter jWriter = new JsonWriter(sw);
-		try {
-			jWriter.beginObject().name("result").value(true);
-			jWriter.name("total").value(
-					Helper.getInstance().getStorageBySize(totalSize));
-			jWriter.name("remain").value(
-					Helper.getInstance().getStorageBySize(availableSize));
-			jWriter.endObject();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (jWriter != null) {
-				try {
-					jWriter.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return sw.toString();
-	}
-
-	/**
 	 * 获取以太网信息
 	 * 
 	 * @return "mode":-1(none)|1(static)|2(dtcp)
@@ -667,14 +644,15 @@ public class SetHelper {
 		StringWriter sw = new StringWriter(80);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(result);
+			jWriter.beginObject().name(Constants.RESULT).value(result);
 			if (result) {
-				jWriter.name("mode").value(bspSystem.getEthernetMode());
-				jWriter.name("ip").value(ip.toString());
-				jWriter.name("gateway").value(gw.toString());
-				jWriter.name("mask").value(mask.toString());
-				jWriter.name("dns1").value(dns1.toString());
-				jWriter.name("dns2").value(dns2.toString());
+				jWriter.name(Constants.Wlan.MODE).value(
+						bspSystem.getEthernetMode());
+				jWriter.name(Constants.Wlan.IP).value(ip.toString());
+				jWriter.name(Constants.Wlan.GATEWAY).value(gw.toString());
+				jWriter.name(Constants.Wlan.SUBMASK).value(mask.toString());
+				jWriter.name(Constants.Wlan.DNS1).value(dns1.toString());
+				jWriter.name(Constants.Wlan.DNS2).value(dns2.toString());
 			}
 			jWriter.endObject();
 		} catch (IOException e) {
@@ -735,13 +713,13 @@ public class SetHelper {
 		StringWriter sw = new StringWriter(80);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(result);
+			jWriter.beginObject().name(Constants.RESULT).value(result);
 			if (result) {
-				jWriter.name("ip").value(ip.toString());
-				jWriter.name("gateway").value(gw.toString());
-				jWriter.name("mask").value(mask.toString());
-				jWriter.name("dns1").value(dns1.toString());
-				jWriter.name("dns2").value(dns2.toString());
+				jWriter.name(Constants.Wlan.IP).value(ip.toString());
+				jWriter.name(Constants.Wlan.GATEWAY).value(gw.toString());
+				jWriter.name(Constants.Wlan.SUBMASK).value(mask.toString());
+				jWriter.name(Constants.Wlan.DNS1).value(dns1.toString());
+				jWriter.name(Constants.Wlan.DNS2).value(dns2.toString());
 			}
 			jWriter.endObject();
 		} catch (IOException e) {
@@ -791,8 +769,8 @@ public class SetHelper {
 		StringWriter sw = new StringWriter(20);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true);
-			jWriter.name("type").value(type);
+			jWriter.beginObject().name(Constants.RESULT).value(true);
+			jWriter.name(Constants.TYPE).value(type);
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -834,14 +812,15 @@ public class SetHelper {
 	/**
 	 * 获取热点自动关闭时间
 	 * 
-	 * @return {"result":true, "time":5}
+	 * @return {Constants.RESULT:true, "time":5}
 	 */
 	private String getWifiAutoDisable() {
 		StringWriter sw = new StringWriter(30);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(true);
-			jWriter.name("time").value(wifiApManager.getWifiAutoDisable());
+			jWriter.beginObject().name(Constants.RESULT).value(true);
+			jWriter.name(Constants.TYPE).value(
+					wifiApManager.getWifiAutoDisable());
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -857,51 +836,22 @@ public class SetHelper {
 		return sw.toString();
 	}
 
-	/**
-	 * 获取错误返回 {"result":false, "error_code":1, "error_msg":"json invalid"}
-	 * 
-	 * @param code
-	 *            可选，值<0时不显示
-	 * @return
-	 */
 	private String getErrorJson(int code) {
-		StringWriter sw = new StringWriter(50);
-		JsonWriter jWriter = new JsonWriter(sw);
-		try {
-			jWriter.beginObject().name("result").value(false);
-			if (code > 0) {
-				jWriter.name("error_code").value(code);
-			}
-			String msg = ErrorBean.getInstance().getErrorMsg(code);
-			if (!TextUtils.isEmpty(msg)) {
-				jWriter.name("error_msg").value(msg);
-			}
-			jWriter.endObject();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (jWriter != null) {
-				try {
-					jWriter.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return sw.toString();
+		return Helper.getInstance().getErrorJson(code);
 	}
 
 	/**
 	 * 获取默认的返回
 	 * 
 	 * @param success
-	 * @return {"result":success}
+	 * @return {Constants.RESULT:success}
 	 */
 	private String getDefaultJson(boolean success) {
 		StringWriter sw = new StringWriter(30);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("result").value(success).endObject();
+			jWriter.beginObject().name(Constants.RESULT).value(success)
+					.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
