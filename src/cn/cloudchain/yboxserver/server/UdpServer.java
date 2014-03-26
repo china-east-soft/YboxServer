@@ -139,7 +139,7 @@ public class UdpServer extends Service {
 		StringWriter sw = new StringWriter(50);
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
-			jWriter.beginObject().name("conn");
+			jWriter.beginObject().name(Constants.Udp.CONN_TYPE);
 			if (bspSystem.getConnected(9)) {
 				jWriter.value(Types.CONN_TYPE_ETHERNET);
 			} else if (!MyApplication.getInstance().isSIMReady) {
@@ -149,10 +149,9 @@ public class UdpServer extends Service {
 			} else {
 				jWriter.value(Types.CONN_TYPE_MOBILE_DATA_OFF);
 			}
-			if (MyApplication.getInstance().isBatteryLow) {
-				jWriter.name("battery_low").value(true);
-			}
-			jWriter.name("clients_update_time").value(
+			jWriter.name(Constants.Udp.BATTERY).value(
+					MyApplication.getInstance().battery);
+			jWriter.name(Constants.Udp.CLIENTS_UPDATE_TIME).value(
 					MyApplication.getInstance().clientUpdateTime);
 			jWriter.endObject();
 		} catch (IOException e) {
