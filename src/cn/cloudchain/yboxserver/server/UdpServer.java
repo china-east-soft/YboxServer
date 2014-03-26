@@ -3,40 +3,54 @@ package cn.cloudchain.yboxserver.server;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.Enumeration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.ybox.hal.BSPSystem;
-
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
+import android.text.TextUtils;
 import android.util.JsonWriter;
 import android.util.Log;
+import cn.cloudchain.yboxcommon.bean.Constants;
 import cn.cloudchain.yboxcommon.bean.Types;
 import cn.cloudchain.yboxserver.MyApplication;
 import cn.cloudchain.yboxserver.helper.Helper;
 import cn.cloudchain.yboxserver.helper.PhoneManager;
+import cn.cloudchain.yboxserver.helper.WeakHandler;
+
+import com.ybox.hal.BSPSystem;
+import com.yyxu.download.utils.MyIntents;
 
 public class UdpServer extends Service {
 	final String TAG = UdpServer.class.getSimpleName();
+
 	private PhoneManager phoneManager;
 	private ScheduledExecutorService executor;
-	private DatagramSocket socket;
-	private final int PORT = 12345;
-	private final String defaultHost = "10.10.10.255";
+	// private DatagramSocket socket;
+	// private final int PORT = 12345;
+	// private final String defaultHost = "10.10.10.255";
 	// private boolean lastEthernet = MyApplication.getInstance().isEthernet;
 	private BSPSystem bspSystem;
 
+	private InetAddress inetAddress;
 	private MulticastLock multiLock;
+	private MyHandler handler = new MyHandler(this);
+	private MulticastSocket multicastSocket;
+	private MyReceiver mReceiver;
 
 	@Override
 	public void onCreate() {
@@ -50,6 +64,11 @@ public class UdpServer extends Service {
 		multiLock.acquire();
 		Log.i(TAG, "onCreate");
 		Helper.getInstance().getBroadcastAddress();
+
+		mReceiver = new MyReceiver();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction("com.yyxu.download.activities.DownloadListActivity");
+		registerReceiver(mReceiver, filter);
 	}
 
 	@Override
@@ -61,6 +80,11 @@ public class UdpServer extends Service {
 
 		if (multiLock != null) {
 			multiLock.release();
+		}
+
+		if (mReceiver != null) {
+			unregisterReceiver(mReceiver);
+			mReceiver = null;
 		}
 		super.onDestroy();
 	}
@@ -77,39 +101,26 @@ public class UdpServer extends Service {
 
 			@Override
 			public void run() {
-				sendUdpBroadcast();
+				sendStatusUdpBroadcast();
 			}
 		}, 0, 3, TimeUnit.SECONDS);
 		return START_STICKY;
 	}
 
-	private void generateSocket() {
-		Log.i(TAG, "generate socket");
-		// InetAddress broadcastAddress = null;
-		// InetAddress broadcastAddress = Helper.getInstance()
-		// .getBroadcastAddress();
-
-		try {
-			socket = new DatagramSocket(PORT);
-			socket.setReuseAddress(true);
-			socket.setBroadcast(true);
-			SocketAddress address = new InetSocketAddress(defaultHost, PORT);
-			socket.connect(address);
-		} catch (SocketException e) {
-			e.printStackTrace();
+	/**
+	 * 定时发送终端状态信息
+	 */
+	private void sendStatusUdpBroadcast() {
+		if (multicastSocket == null) {
+			generateMuticastSocket();
 		}
 
-	}
-
-	private void sendUdpBroadcast() {
-		if (socket == null) {
-			generateSocket();
-		}
 		try {
 			String message = generateContent();
 			byte[] data = message.getBytes();
-			DatagramPacket pack = new DatagramPacket(data, data.length);
-			socket.send(pack);
+			DatagramPacket pack = new DatagramPacket(data, data.length,
+					inetAddress, Constants.GROUP_PORT);
+			multicastSocket.send(pack);
 
 			Log.i(TAG, "send udp broadcast");
 		} catch (SocketException e) {
@@ -156,6 +167,150 @@ public class UdpServer extends Service {
 			}
 		}
 		return sw.toString();
+	}
+
+	/**
+	 * 用于处理下载相关进度更新
+	 * 
+	 * @author lazzy
+	 * 
+	 */
+	private static class MyHandler extends WeakHandler<UdpServer> {
+		public MyHandler(UdpServer owner) {
+			super(owner);
+		}
+
+		@Override
+		public void handleMessage(Message msg) {
+			super.handleMessage(msg);
+			if (getOwner() == null) {
+				return;
+			}
+			Bundle bundle = msg.getData();
+			if (bundle == null)
+				return;
+
+			String url = bundle.getString(MyIntents.URL);
+			if (TextUtils.isEmpty(url)) {
+				return;
+			}
+			int type = bundle.getInt(MyIntents.TYPE);
+			switch (type) {
+			case MyIntents.Types.PROCESS:
+				int progress = (int) bundle.getLong(MyIntents.PROCESS_PROGRESS);
+				getOwner().sendDowloadDataPack(
+						String.format("{\"url\":\"%s\", \"progress\":%d}", url,
+								progress));
+				break;
+			case MyIntents.Types.COMPLETE:
+				getOwner().sendDowloadDataPack(
+						String.format("{\"url\":\"%s\", \"complete\":true}",
+								url));
+				break;
+			case MyIntents.Types.ERROR:
+				int errorCode = bundle.getInt(MyIntents.ERROR_CODE);
+				getOwner().sendDowloadDataPack(
+						String.format("{\"url\":\"%s\", \"error\":%d}", url,
+								errorCode));
+				break;
+			}
+		}
+	}
+
+	/**
+	 * 发送下载进度信息
+	 * 
+	 * @param message
+	 */
+	private void sendDowloadDataPack(final String message) {
+		if (TextUtils.isEmpty(message))
+			return;
+
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				if (multicastSocket == null) {
+					generateMuticastSocket();
+				}
+				if (multicastSocket != null) {
+					Log.i(TAG, "multicast send = " + message);
+					byte[] data = message.getBytes();
+					DatagramPacket pack = new DatagramPacket(data, data.length,
+							inetAddress, Constants.GROUP_PORT);
+					try {
+						multicastSocket.send(pack);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+	}
+
+	/**
+	 * 生成组播socket
+	 */
+	private void generateMuticastSocket() {
+		try {
+			NetworkInterface eth0 = getInterface();
+			multicastSocket = new MulticastSocket(Constants.GROUP_PORT);
+			if (eth0 != null) {
+				multicastSocket.setNetworkInterface(eth0);
+			}
+			inetAddress = InetAddress.getByName(Constants.GROUP_HOST);
+			multicastSocket.joinGroup(inetAddress);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 获取ap0的interface
+	 * 
+	 * @return
+	 */
+	private NetworkInterface getInterface() {
+		NetworkInterface eth0 = null;
+		try {
+			Enumeration<NetworkInterface> enumeration = NetworkInterface
+					.getNetworkInterfaces();
+			while (enumeration.hasMoreElements()) {
+				eth0 = enumeration.nextElement();
+				if (eth0.getName().equals("ap0")) {
+					break;
+				}
+			}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		return eth0;
+	}
+
+	/**
+	 * 监听下载进度广播
+	 * 
+	 * @author lazzy
+	 * 
+	 */
+	private class MyReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent == null)
+				return;
+			handleIntent(intent);
+		}
+
+		private void handleIntent(Intent intent) {
+			if (intent.getAction().equals(
+					"com.yyxu.download.activities.DownloadListActivity")) {
+				Bundle data = intent.getExtras();
+				Message msg = handler.obtainMessage();
+				msg.setData(data);
+				handler.sendMessage(msg);
+			}
+		}
 	}
 
 }
