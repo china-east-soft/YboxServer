@@ -298,18 +298,29 @@ public class SetHelper {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name(Constants.RESULT).value(true);
+			boolean updating = false;
 			if (!TextUtils.isEmpty(imageUrl)) {
 				String filePath = StorageUtils.FILE_ROOT
 						+ NetworkUtils.getFileNameFromUrl(imageUrl);
 				int result = bspSystem.setUpgradeImg(1, filePath);
+				if (result == 0) {
+					updating = true;
+				}
 				jWriter.name(Constants.Update.IMAGE_RESULT).value(result);
-			} 
-			
+			}
+
 			if (!TextUtils.isEmpty(middleUrl)) {
-				String filePath = StorageUtils.FILE_ROOT
-						+ NetworkUtils.getFileNameFromUrl(middleUrl);
-				int result = bspSystem.install_apk_slient(filePath);
-				jWriter.name(Constants.Update.MIDDLE_URL).value(result);
+				if (updating) {
+					PreferenceHelper.putInt(PreferenceHelper.MIDDLE_UPDATE,
+							PreferenceHelper.MIDDLE_UPDATE_RESTART);
+					PreferenceHelper.putString(
+							PreferenceHelper.IMAGE_UPDATE_PATH, middleUrl);
+				} else {
+					String filePath = StorageUtils.FILE_ROOT
+							+ NetworkUtils.getFileNameFromUrl(middleUrl);
+					int result = bspSystem.install_apk_slient(filePath);
+					jWriter.name(Constants.Update.MIDDLE_URL).value(result);
+				}
 			}
 			jWriter.endObject();
 		} catch (IOException e) {
