@@ -15,11 +15,11 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+import cn.cloudchain.yboxcommon.bean.Constants;
 import cn.cloudchain.yboxserver.helper.SetHelper;
 
 public class TcpServer extends Service {
 	private final String TAG = TcpServer.class.getSimpleName();
-	private final int port = 8888;
 	private ExecutorService executor;
 	private boolean stopListen = false;
 
@@ -51,7 +51,7 @@ public class TcpServer extends Service {
 
 			@Override
 			public void run() {
-				listenPort(port);
+				listenPort(Constants.SOCKET_PORT);
 			}
 		});
 		return START_STICKY;
