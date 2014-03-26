@@ -8,12 +8,17 @@ import cn.cloudchain.yboxserver.MyApplication;
 public class PreferenceHelper {
 	public static final String AUTO_SLEEP = "auto_sleep";
 
-	public static final String ROOT_IMAGE_UPDATE = "root_image_update";
-	public static final String ROOT_IMAGE_UPDATE_PATH = "root_image_update_path";
+	public static final String IMAGE_VERSION = "image_version";
+	public static final String IMAGE_UPDATE = "image_update";
+	public static final String IMAGE_UPDATE_PATH = "image_update_path";
+	public static final String MIDDLE_VERSION = "middle_version";
+	public static final String MIDDLE_UPDATE = "_middle_update";
+	public static final String MIDDLE_UPDATE_PATH = "middle_update_path";
 	/**
 	 * 如果{@link ROOT_IMAGE_UPDATE}为该值，则需执行root image升级操作
 	 */
-	public static final int ROOT_IMAGE_UPDATE_RESTART = 1;
+	public static final int IMAGE_UPDATE_RESTART = 1;
+	public static final int MIDDLE_UPDATE_RESTART = 1;
 
 	private static SharedPreferences prefSetting = PreferenceManager
 			.getDefaultSharedPreferences(MyApplication.getAppContext());

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -157,11 +158,8 @@ public class SetHelper {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
 				} else {
 					String ssid = params.optString(Constants.Wifi.SSID);
-					String pass = params.optString(Constants.Wifi.PASS);
-					int keymgmt = params.optInt(Constants.Wifi.KEYMGMT, -1);
-					int maxclient = params
-							.optInt(Constants.Wifi.MAX_CLIENT, -1);
-					result = setWifiInfo(ssid, pass, keymgmt, maxclient);
+					int channel = params.optInt(Constants.Wifi.CHANNEL);
+					result = setWifiInfo(ssid, channel);
 				}
 			}
 				break;
@@ -222,8 +220,15 @@ public class SetHelper {
 						params == null ? "" : params
 								.optString(Constants.File.PATH_ABSOLUTE));
 				break;
-			case files_delete:
+			case files_delete: {
+				if (params == null) {
+					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+				} else {
+					JSONArray files = params.optJSONArray(Constants.File.FILES);
+					result = deleteFiles(files);
+				}
 				break;
+			}
 			case files_download:
 				break;
 			default:
@@ -235,6 +240,23 @@ public class SetHelper {
 			result = getErrorJson(ErrorBean.REQUEST_FORMAT_WRONG);
 		}
 		return result;
+	}
+
+	/**
+	 * 删除文件/文件夹
+	 * 
+	 * @param fileArray
+	 * @return
+	 */
+	private String deleteFiles(JSONArray fileArray) {
+		if (fileArray == null) {
+			return getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);
+		}
+		for (int index = 0; index < fileArray.length(); ++index) {
+			FileManager.getInstance().removeFileOrDirectory(
+					fileArray.optString(index));
+		}
+		return getDefaultJson(true);
 	}
 
 	/**
@@ -281,7 +303,8 @@ public class SetHelper {
 						+ NetworkUtils.getFileNameFromUrl(imageUrl);
 				int result = bspSystem.setUpgradeImg(1, filePath);
 				jWriter.name(Constants.Update.IMAGE_RESULT).value(result);
-			}
+			} 
+			
 			if (!TextUtils.isEmpty(middleUrl)) {
 				String filePath = StorageUtils.FILE_ROOT
 						+ NetworkUtils.getFileNameFromUrl(middleUrl);
@@ -471,41 +494,15 @@ public class SetHelper {
 	 * @param maxclient
 	 * @return
 	 */
-	private String setWifiInfo(String ssid, String pass, int keymgmt,
-			int maxclient) {
-		Log.i(TAG, "ssid = " + ssid + "; pass = " + pass);
+	private String setWifiInfo(String ssid, int channel) {
 		WifiConfiguration wifiConfig = wifiApManager.getWifiApConfiguration();
-		wifiConfig.SSID = ssid;
-		switch (keymgmt) {
-		case Types.KEYMGMT_NONE:
-			wifiConfig.allowedKeyManagement.set(KeyMgmt.NONE);
-			break;
-		case Types.KEYMGMT_WPA_PSK:
-			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA_PSK);
-			wifiConfig.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
-			if (!TextUtils.isEmpty(pass)) {
-				wifiConfig.preSharedKey = pass;
-			}
-			break;
-		case Types.KEYMGMT_WPA2_PSK:
-			wifiConfig.allowedKeyManagement.set(KeyMgmt.WPA2_PSK);
-			wifiConfig.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
-			if (!TextUtils.isEmpty(pass)) {
-				wifiConfig.preSharedKey = pass;
-			}
-			break;
-		}
+		wifiConfig.SSID = "YBOX-" + ssid;
+		wifiConfig.allowedKeyManagement.set(KeyMgmt.NONE);
 		wifiConfig.status = WifiConfiguration.Status.ENABLED;
 		wifiConfig.hiddenSSID = false;
+		wifiConfig.channelWidth = channel;
 
-		boolean result = true;
-		if (maxclient > 0) {
-			result = wifiApManager.setMaxClientNum(maxclient);
-		}
-		if (result) {
-			result = wifiApManager.setWifiApConfiguration(wifiConfig);
-		}
-
+		boolean result = wifiApManager.setWifiApConfiguration(wifiConfig);
 		return getDefaultJson(result);
 	}
 
@@ -524,16 +521,7 @@ public class SetHelper {
 		try {
 			jWriter.beginObject().name(Constants.RESULT).value(true)
 					.name(Constants.Wifi.SSID).value(config.SSID);
-
-			if (!config.allowedKeyManagement.get(KeyMgmt.NONE)) {
-				jWriter.name(Constants.Wifi.PASS).value(config.preSharedKey);
-			}
-			jWriter.name(Constants.Wifi.KEYMGMT).value(
-					getSecurityTypeIndex(config));
-			jWriter.name(Constants.Wifi.AUTO_DISABLE).value(
-					wifiApManager.getWifiAutoDisable());
-			jWriter.name(Constants.Wifi.MAX_CLIENT).value(
-					wifiApManager.getMaxClientNum());
+			jWriter.name(Constants.Wifi.CHANNEL).value(config.channelWidth);
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -547,21 +535,6 @@ public class SetHelper {
 			}
 		}
 		return sw.toString();
-	}
-
-	/**
-	 * 获取加密方式的index
-	 * 
-	 * @param wifiConfig
-	 * @return NONE = 0, WPA = 1, WPA2 = 2
-	 */
-	private int getSecurityTypeIndex(WifiConfiguration wifiConfig) {
-		if (wifiConfig.allowedKeyManagement.get(KeyMgmt.WPA_PSK)) {
-			return Types.KEYMGMT_WPA_PSK;
-		} else if (wifiConfig.allowedKeyManagement.get(KeyMgmt.WPA2_PSK)) {
-			return Types.KEYMGMT_WPA2_PSK;
-		}
-		return Types.KEYMGMT_NONE;
 	}
 
 	/**

@@ -1,5 +1,7 @@
 package cn.cloudchain.yboxserver;
 
+import java.io.IOException;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +16,7 @@ import cn.cloudchain.yboxserver.helper.PreferenceHelper;
 import cn.cloudchain.yboxserver.helper.WifiApManager;
 import cn.cloudchain.yboxserver.receiver.BatteryInfoBroadcastReceiver;
 import cn.cloudchain.yboxserver.receiver.PhoneStateMonitor;
+import cn.cloudchain.yboxserver.server.HttpServer;
 import cn.cloudchain.yboxserver.server.TcpServer;
 import cn.cloudchain.yboxserver.server.UdpServer;
 
@@ -37,14 +40,14 @@ public class MyApplication extends Application {
 		BSPSystem bspSystem = new BSPSystem(this);
 
 		// 如果需要升级
-		if (PreferenceHelper.getInt(PreferenceHelper.ROOT_IMAGE_UPDATE, 0) == PreferenceHelper.ROOT_IMAGE_UPDATE_RESTART) {
+		if (PreferenceHelper.getInt(PreferenceHelper.MIDDLE_UPDATE, 0) == PreferenceHelper.MIDDLE_UPDATE_RESTART) {
 			String filePath = PreferenceHelper.getString(
-					PreferenceHelper.ROOT_IMAGE_UPDATE_PATH, "");
+					PreferenceHelper.MIDDLE_UPDATE_PATH, "");
 			if (!TextUtils.isEmpty(filePath)) {
-				bspSystem.setUpgradeImg(1, filePath);
+				bspSystem.install_apk_slient(filePath);
 			}
-			PreferenceHelper.remove(PreferenceHelper.ROOT_IMAGE_UPDATE);
-			PreferenceHelper.remove(PreferenceHelper.ROOT_IMAGE_UPDATE_PATH);
+			PreferenceHelper.remove(PreferenceHelper.MIDDLE_UPDATE);
+			PreferenceHelper.remove(PreferenceHelper.MIDDLE_UPDATE);
 		}
 
 		isEthernet = bspSystem.getConnected(9);
@@ -73,6 +76,12 @@ public class MyApplication extends Application {
 		TelephonyManager telManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 		telManager.listen(new PhoneStateMonitor(telManager),
 				PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+
+		try {
+			new HttpServer(8080);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static Context getAppContext() {
