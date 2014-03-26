@@ -21,6 +21,29 @@ public class FileManager {
 		return instance;
 	}
 
+	public boolean removeFileOrDirectory(String path) {
+		if (TextUtils.isEmpty(path))
+			return false;
+
+		File file = new File(path);
+		boolean result = false;
+		if (!file.exists()) {
+			result = true;
+		} else if (file.isFile()) {
+			result = file.delete();
+		} else {
+			String[] children = file.list();
+			if (children.length > 0) {
+				for (int i = 0; i < children.length; i++) {
+					result = removeFileOrDirectory(children[i]);
+				}
+			} else {
+				result = file.delete();
+			}
+		}
+		return result;
+	}
+
 	/**
 	 * 获取文件夹具体信息
 	 * 
