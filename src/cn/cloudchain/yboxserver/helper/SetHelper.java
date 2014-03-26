@@ -37,6 +37,11 @@ public class SetHelper {
 	private DataUsageHelper dataUsageHelper;
 	private BSPSystem bspSystem;
 
+	private String middleName = "YboxServer";
+	private String middleVersion = "";
+	private String imageName = "";
+	private String imageVersion = "";
+
 	/*
 	 * 一般错误 1 空字符串 2
 	 */
@@ -53,6 +58,10 @@ public class SetHelper {
 		wifiApManager = new WifiApManager(context);
 		dataUsageHelper = new DataUsageHelper(context);
 		bspSystem = new BSPSystem(context);
+
+		middleVersion = Helper.getInstance().getVersionName(context);
+		imageName = Helper.getInstance().getImageName();
+		imageVersion = Helper.getInstance().getImageVersionName();
 	}
 
 	public String handleJsonRequest(String operation) {
@@ -271,7 +280,12 @@ public class SetHelper {
 		JsonWriter jWriter = new JsonWriter(sw);
 		try {
 			jWriter.beginObject().name(Constants.RESULT).value(true)
-					.name(Constants.DeviceInfo.MAC).value(mac).endObject();
+					.name(Constants.DeviceInfo.MAC).value(mac);
+			jWriter.name(Constants.Update.IMAGE_NAME).value(imageName);
+			jWriter.name(Constants.Update.IMAGE_VERSION).value(imageVersion);
+			jWriter.name(Constants.Update.MIDDLE_NAME).value(middleName);
+			jWriter.name(Constants.Update.MIDDLE_VERSION).value(middleVersion);
+			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {

@@ -23,8 +23,12 @@ import android.util.Log;
 import cn.cloudchain.yboxcommon.bean.Constants;
 import cn.cloudchain.yboxcommon.bean.ErrorBean;
 
+import android.os.SystemProperties;
+
 public class Helper {
 	final String TAG = Helper.class.getSimpleName();
+	private final String PropertyImageName = "IMAGE_NAME";
+	private final String PropertyImageVersion = "IMAGE_VERSION";
 	private static Helper instance;
 
 	public static Helper getInstance() {
@@ -35,6 +39,22 @@ public class Helper {
 
 	private Helper() {
 
+	}
+	
+	/**
+	 * 获取root image的版本号
+	 * @return
+	 */
+	public String getImageVersionName() {
+		return SystemProperties.get(PropertyImageVersion);
+	}
+	
+	/**
+	 * 获取root image的名字
+	 * @return
+	 */
+	public String getImageName() {
+		return SystemProperties.get(PropertyImageName);
 	}
 
 	/**
