@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiConfiguration.AuthAlgorithm;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.text.TextUtils;
 import android.util.JsonWriter;
@@ -224,11 +223,24 @@ public class SetHelper {
 				result = getDeviceInfo();
 				break;
 			}
-			case files_detail:
-				result = FileManager.getInstance().getFilesInDirectory(
-						params == null ? "" : params
-								.optString(Constants.File.PATH_ABSOLUTE));
+			case files_detail: {
+				int type = params == null ? Types.FILE_ALL : params.optInt(
+						Constants.TYPE, Types.FILE_ALL);
+				switch (type) {
+				case Types.FILE_ALL:
+					result = FileManager.getInstance().getFilesInDirectory(
+							params == null ? "" : params
+									.optString(Constants.File.PATH_ABSOLUTE));
+					break;
+				case Types.FILE_ONLY_AUDIO:
+					result = FileManager.getInstance().audioStream();
+					break;
+				case Types.FILE_ONLY_VIDEO:
+					result = FileManager.getInstance().videoStream();
+					break;
+				}
 				break;
+			}
 			case files_delete: {
 				if (params == null) {
 					result = getErrorJson(ErrorBean.REQUEST_PARAMS_INVALID);

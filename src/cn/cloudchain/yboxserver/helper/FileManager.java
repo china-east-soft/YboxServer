@@ -4,12 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import android.database.Cursor;
 import android.os.Environment;
 import android.os.StatFs;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.JsonWriter;
 import cn.cloudchain.yboxcommon.bean.Constants;
 import cn.cloudchain.yboxcommon.bean.ErrorBean;
+import cn.cloudchain.yboxserver.MyApplication;
 
 public class FileManager {
 	final static String TAG = FileManager.class.getSimpleName();
@@ -96,6 +99,132 @@ public class FileManager {
 				jWriter.name(Constants.File.LAST_MODIFY_TIME).value(
 						file.lastModified());
 				jWriter.endObject();
+			}
+			jWriter.endArray();
+			jWriter.endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
+	}
+
+	/**
+	 * 获取所有的音频文件
+	 * 
+	 * @return
+	 */
+	public String audioStream() {
+		String[] projects = { MediaStore.Audio.Media._ID,
+				MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA,
+				MediaStore.Audio.Media.SIZE,
+				MediaStore.Audio.Media.DATE_MODIFIED };
+
+		Cursor cursor = MyApplication
+				.getAppContext()
+				.getContentResolver()
+				.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projects,
+						null, null, null);
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject();
+			jWriter.name(Constants.RESULT).value(true)
+					.name(Constants.File.FILES).beginArray();
+			if (cursor.moveToFirst()) {
+				do {
+					String name = cursor
+							.getString(cursor
+									.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+					String filePath = cursor
+							.getString(cursor
+									.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
+					long size = cursor
+							.getLong(cursor
+									.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE));
+					long time_modified = cursor
+							.getLong(cursor
+									.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED));
+					jWriter.beginObject();
+					jWriter.name(Constants.File.NAME).value(name);
+					jWriter.name(Constants.File.PATH_ABSOLUTE).value(filePath);
+					jWriter.name(Constants.File.IS_DIRECTORY).value(false);
+					jWriter.name(Constants.File.SIZE).value(size);
+					jWriter.name(Constants.File.LAST_MODIFY_TIME).value(
+							time_modified);
+					jWriter.endObject();
+
+				} while (cursor.moveToNext());
+			}
+			jWriter.endArray();
+			jWriter.endObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (jWriter != null) {
+				try {
+					jWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return sw.toString();
+	}
+
+	/**
+	 * 获取所有的视频文件
+	 * 
+	 * @return
+	 */
+	public String videoStream() {
+		String[] projects = { MediaStore.Video.Media._ID,
+				MediaStore.Video.Media.TITLE, MediaStore.Video.Media.DATA,
+				MediaStore.Video.Media.SIZE,
+				MediaStore.Video.Media.DATE_MODIFIED };
+
+		Cursor cursor = MyApplication
+				.getAppContext()
+				.getContentResolver()
+				.query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, projects,
+						null, null, null);
+		StringWriter sw = new StringWriter(50);
+		JsonWriter jWriter = new JsonWriter(sw);
+		try {
+			jWriter.beginObject();
+			jWriter.name(Constants.RESULT).value(true)
+					.name(Constants.File.FILES).beginArray();
+			if (cursor.moveToFirst()) {
+				do {
+					String name = cursor
+							.getString(cursor
+									.getColumnIndexOrThrow(MediaStore.Video.Media.TITLE));
+					String filePath = cursor
+							.getString(cursor
+									.getColumnIndexOrThrow(MediaStore.Video.Media.DATA));
+					long size = cursor
+							.getLong(cursor
+									.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE));
+					long time_modified = cursor
+							.getLong(cursor
+									.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED));
+					jWriter.beginObject();
+					jWriter.name(Constants.File.NAME).value(name);
+					jWriter.name(Constants.File.PATH_ABSOLUTE).value(filePath);
+					jWriter.name(Constants.File.IS_DIRECTORY).value(false);
+					jWriter.name(Constants.File.SIZE).value(size);
+					jWriter.name(Constants.File.LAST_MODIFY_TIME).value(
+							time_modified);
+					jWriter.endObject();
+
+				} while (cursor.moveToNext());
 			}
 			jWriter.endArray();
 			jWriter.endObject();
