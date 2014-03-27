@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cn.cloudchain.yboxserver"
-    android:versionCode="1"
     android:sharedUserId="android.uid.system"
+    android:versionCode="1"
     android:versionName="1.0" >
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -39,6 +39,7 @@
 
         <service android:name="cn.cloudchain.yboxserver.server.TcpServer" />
         <service android:name="cn.cloudchain.yboxserver.server.UdpServer" />
+        <service android:name="cn.cloudchain.yboxserver.server.TimetickServer" />
 
         <receiver android:name="cn.cloudchain.yboxserver.receiver.WifiApStateChangeReceiver" >
             <intent-filter>
@@ -52,6 +53,12 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+        
+        <receiver android:name="cn.cloudchain.yboxserver.receiver.TimeTickBroadcastReceiver">
+            <intent-filter>
+                <action android:name="cn.cloudchain.yboxserver.START_TICKER"/>
             </intent-filter>
         </receiver>
     </application>

@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 import cn.cloudchain.yboxcommon.bean.DeviceInfo;
 import cn.cloudchain.yboxcommon.bean.Types;
 import cn.cloudchain.yboxserver.helper.PreferenceHelper;
@@ -22,6 +23,7 @@ import com.ybox.hal.BSPSystem;
  * 
  */
 public class TimetickServer extends Service {
+	private final String TAG = TimetickServer.class.getSimpleName();
 	private Timer timer;
 	private TimerTask timerTask;
 	private long delay = 0L;
@@ -52,6 +54,7 @@ public class TimetickServer extends Service {
 		if (delay > 0) {
 			startTimer();
 		} else {
+			endTimer();
 			this.stopSelf();
 		}
 		return onStartCommand(intent, flags, startId);
@@ -64,6 +67,7 @@ public class TimetickServer extends Service {
 	}
 
 	private void startTimer() {
+		Log.i(TAG, "start time ticker");
 		if (timer == null) {
 			timer = new Timer();
 		}
@@ -80,6 +84,7 @@ public class TimetickServer extends Service {
 	}
 
 	private void endTimer() {
+		Log.i(TAG, "end time ticker");
 		if (timer != null) {
 			timer.cancel();
 			timer = null;
