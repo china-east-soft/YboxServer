@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Environment;
 import android.os.StatFs;
 import android.provider.MediaStore;
@@ -34,6 +36,12 @@ public class FileManager {
 			result = true;
 		} else if (file.isFile()) {
 			result = file.delete();
+			// 文件删除成功，重新扫描该文件
+			if (result) {
+				MyApplication.getAppContext().sendBroadcast(
+						new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri
+								.parse("file://" + path)));
+			}
 		} else {
 			String[] children = file.list();
 			if (children.length > 0) {
@@ -42,6 +50,12 @@ public class FileManager {
 				}
 			} else {
 				result = file.delete();
+				// 文件夹删除成功，重新扫描该文件夹
+				if (result) {
+					MyApplication.getAppContext().sendBroadcast(
+							new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri
+									.parse("file://" + path)));
+				}
 			}
 		}
 		return result;
