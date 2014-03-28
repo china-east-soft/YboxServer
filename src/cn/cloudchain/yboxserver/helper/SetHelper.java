@@ -537,7 +537,8 @@ public class SetHelper {
 		wifiConfig.allowedKeyManagement.set(KeyMgmt.NONE);
 		wifiConfig.status = WifiConfiguration.Status.ENABLED;
 		wifiConfig.hiddenSSID = false;
-		wifiConfig.channelWidth = channel;
+		wifiConfig.channel = channel;
+		wifiConfig.channelWidth = 1; //0: 20MHz only 1: Auto 20/40 Mhz
 
 		boolean result = wifiApManager.setWifiApConfiguration(wifiConfig);
 		return getDefaultJson(result);
@@ -558,7 +559,7 @@ public class SetHelper {
 		try {
 			jWriter.beginObject().name(Constants.RESULT).value(true)
 					.name(Constants.Wifi.SSID).value(config.SSID);
-			jWriter.name(Constants.Wifi.CHANNEL).value(config.channelWidth);
+			jWriter.name(Constants.Wifi.CHANNEL).value(config.channel);
 			jWriter.endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
