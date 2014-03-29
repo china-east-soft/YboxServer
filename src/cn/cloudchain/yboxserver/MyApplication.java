@@ -11,6 +11,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
+import cn.cloudchain.yboxcommon.bean.Constants;
 import cn.cloudchain.yboxserver.helper.PhoneManager;
 import cn.cloudchain.yboxserver.helper.PreferenceHelper;
 import cn.cloudchain.yboxserver.helper.WifiApManager;
@@ -78,7 +79,7 @@ public class MyApplication extends Application {
 				PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 
 		try {
-			new HttpServer(8080);
+			new HttpServer(Constants.MIDDLE_HTTP_PORT);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -97,13 +98,12 @@ public class MyApplication extends Application {
 		WifiConfiguration config = wifiApManager.getWifiApConfiguration();
 		if (config == null) {
 			config = new WifiConfiguration();
-			config.SSID = "INIT";
-			config.preSharedKey = "11111111";
+			config.SSID = "YBOX-123";
 		}
+		config.allowedKeyManagement.clear();
+		config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
 		config.hiddenSSID = false;
-		boolean result = wifiApManager.setWifiApEnabled(config, true);
-		Log.i(TAG, "enable result = " + result + ";pass = "
-				+ config.preSharedKey + ";ssid = " + config.SSID);
+		wifiApManager.setWifiApEnabled(config, true);
 	}
 
 }
