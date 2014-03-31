@@ -264,6 +264,7 @@ public class UdpServer extends Service {
 			if (eth0 != null) {
 				multicastSocket.setNetworkInterface(eth0);
 			}
+			multicastSocket.setReuseAddress(true);
 			inetAddress = InetAddress.getByName(Constants.GROUP_HOST);
 			multicastSocket.joinGroup(inetAddress);
 		} catch (IOException e) {
