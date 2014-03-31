@@ -74,6 +74,14 @@ public class SetHelper {
 			JSONObject params = obj.optJSONObject(Constants.PARAMS);
 
 			switch (OperType.getOperType(oper)) {
+			case hls_start:
+				ApHelper.startHls();
+				result = getDefaultJson(true);
+				break;
+			case hls_stop:
+				ApHelper.endHls();
+				result = getDefaultJson(true);
+				break;
 			case battery:
 				result = getBattery();
 				break;
@@ -538,7 +546,7 @@ public class SetHelper {
 		wifiConfig.status = WifiConfiguration.Status.ENABLED;
 		wifiConfig.hiddenSSID = false;
 		wifiConfig.channel = channel;
-		wifiConfig.channelWidth = 1; //0: 20MHz only 1: Auto 20/40 Mhz
+		wifiConfig.channelWidth = 1; // 0: 20MHz only 1: Auto 20/40 Mhz
 
 		boolean result = wifiApManager.setWifiApConfiguration(wifiConfig);
 		return getDefaultJson(result);
