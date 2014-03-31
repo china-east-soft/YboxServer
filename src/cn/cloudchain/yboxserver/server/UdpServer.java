@@ -285,7 +285,8 @@ public class UdpServer extends Service {
 					.getNetworkInterfaces();
 			while (enumeration.hasMoreElements()) {
 				eth0 = enumeration.nextElement();
-				if (eth0.getName().equals("ap0")) {
+				if (eth0.getName().equals("ap0")
+						|| eth0.getName().equals("eth0")) {
 					break;
 				}
 			}
