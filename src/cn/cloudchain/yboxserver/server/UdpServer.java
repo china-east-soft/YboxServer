@@ -3,10 +3,9 @@ package cn.cloudchain.yboxserver.server;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.DatagramPacket;
-import java.net.InetSocketAddress;
+import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
-import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.concurrent.Executors;
@@ -43,7 +42,7 @@ public class UdpServer extends Service {
 	private ScheduledExecutorService executor;
 	private BSPSystem bspSystem;
 
-	private SocketAddress socketAddress;
+	private InetAddress inetAddress;
 	private MulticastLock multiLock;
 	private MyHandler handler = new MyHandler(this);
 	private MulticastSocket multicastSocket;
@@ -83,6 +82,17 @@ public class UdpServer extends Service {
 			unregisterReceiver(mReceiver);
 			mReceiver = null;
 		}
+
+		if (multicastSocket != null) {
+			try {
+				multicastSocket.leaveGroup(inetAddress);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				multicastSocket.close();
+				multicastSocket = null;
+			}
+		}
 		super.onDestroy();
 	}
 
@@ -116,7 +126,7 @@ public class UdpServer extends Service {
 			String message = generateContent();
 			byte[] data = message.getBytes();
 			DatagramPacket pack = new DatagramPacket(data, data.length,
-					socketAddress);
+					inetAddress, Constants.GROUP_PORT);
 			multicastSocket.send(pack);
 
 			Log.i(TAG, "send udp broadcast");
@@ -234,7 +244,7 @@ public class UdpServer extends Service {
 						Log.i(TAG, "multicast send = " + message);
 						byte[] data = message.getBytes();
 						DatagramPacket pack = new DatagramPacket(data,
-								data.length, socketAddress);
+								data.length, inetAddress, Constants.GROUP_PORT);
 						multicastSocket.send(pack);
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -254,9 +264,8 @@ public class UdpServer extends Service {
 			if (eth0 != null) {
 				multicastSocket.setNetworkInterface(eth0);
 			}
-			socketAddress = new InetSocketAddress(Constants.GROUP_HOST,
-					Constants.GROUP_PORT);
-			multicastSocket.joinGroup(socketAddress, eth0);
+			inetAddress = InetAddress.getByName(Constants.GROUP_HOST);
+			multicastSocket.joinGroup(inetAddress);
 		} catch (IOException e) {
 			e.printStackTrace();
 			multicastSocket = null;
